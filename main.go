@@ -72,7 +72,7 @@ func main() {
 	var gatewayTmp gateway.Gateway
 
 	if config.GatewayInsecureBindAddr != "" {
-		gatewayTmp, err = gateway.NewGatewayInsecure(config.GatewayInsecureBindAddr, config.GatewayPassword)
+		gatewayTmp, err = gateway.NewGatewayInsecure(workReceiver, config.GatewayInsecureBindAddr, config.GatewayPassword)
 		if err != nil {
 			log.Logger.WithFields(logrus.Fields{
 				"prefix": "gateway",

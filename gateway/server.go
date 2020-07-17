@@ -10,21 +10,23 @@ import (
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/process"
 	"github.com/flexpool/solo/utils"
+	"github.com/flexpool/solo/workreceiver"
 	"github.com/sirupsen/logrus"
 )
 
 // Gateway is a stratum proxy that servers workers
 type Gateway struct {
-	bind              string
-	stratumPassword   string
-	isSecure          bool
-	tlsKeyPair        tls.Certificate
-	context           context.Context
-	cancelContextFunc context.CancelFunc
+	bind               string
+	stratumPassword    string
+	isSecure           bool
+	tlsKeyPair         tls.Certificate
+	context            context.Context
+	cancelContextFunc  context.CancelFunc
+	parentWorkReceiver *workreceiver.WorkReceiver
 }
 
 // NewGatewayInsecure creates Non SSL gateway instance
-func NewGatewayInsecure(bind string, password string) (Gateway, error) {
+func NewGatewayInsecure(parentWorkReceiver *workreceiver.WorkReceiver, bind string, password string) (Gateway, error) {
 	err := utils.IsInvalidAddress(bind)
 	if err != nil {
 		return Gateway{}, err
@@ -32,7 +34,7 @@ func NewGatewayInsecure(bind string, password string) (Gateway, error) {
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
-	return Gateway{bind: bind, stratumPassword: password, isSecure: false, context: ctx, cancelContextFunc: cancelFunc}, nil
+	return Gateway{bind: bind, stratumPassword: password, isSecure: false, context: ctx, cancelContextFunc: cancelFunc, parentWorkReceiver: parentWorkReceiver}, nil
 }
 
 // Run runs the Gateway

@@ -9,8 +9,32 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func write(conn net.Conn, data []byte) {
-	conn.Write(append(data, '\n'))
+func write(conn net.Conn, data []byte) (int, error) {
+	return conn.Write(append(data, '\n'))
+}
+
+// RunWorkSender runs a work sender for a given connection
+func (g *Gateway) RunWorkSender(conn net.Conn) {
+	// Creating a channel and subscribing it to the work receiver
+	ch := make(chan []string)
+
+	g.parentWorkReceiver.SubscribeNotifications(ch)
+
+	for {
+		work := <-ch
+		_, err := write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
+			JSONRPCVersion: jsonrpc.Version,
+			ID:             0,
+			Result:         work,
+		}))
+
+		if err != nil {
+			break
+		}
+	}
+
+	// Closed channel would be automatically unsubscribed by work receiver garbege collector
+	close(ch)
 }
 
 // HandleConnection handles the gateway connection
@@ -77,6 +101,10 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 			}))
 
 			authenticated = true
+
+			// Starting work sender
+			go g.RunWorkSender(conn)
+
 			continue
 		}
 
