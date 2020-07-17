@@ -10,7 +10,7 @@ A portable self-hosted SOLO Ethereum Mining Pool.
 - [ ] Solution verification & Submission
 
 ### Analytics
-- TBD
+TBD
 
 ### Rich Front End
 TBD
