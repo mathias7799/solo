@@ -5,8 +5,15 @@ A portable self-hosted SOLO Ethereum Mining Pool.
 
 # TODO
 
+### Core Mining Engine
 - [x] Worker Authentication & Work Receiver
 - [ ] Solution verification & Submission
-- [ ] Stats collection
-- [ ] Rich Front End interface
-- [ ] Documentation
+
+### Analytics
+- TBD
+
+### Rich Front End
+TBD
+
+### Documentation
+TBD
