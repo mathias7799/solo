@@ -62,6 +62,7 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 			if !authenticated {
 				return
 			}
+			continue
 		}
 
 		if !authenticated {
@@ -109,6 +110,14 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 		}
 
 		switch request.Method {
+		case "eth_getWork":
+
+			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
+				JSONRPCVersion: jsonrpc.Version,
+				ID:             request.ID,
+				Result:         g.parentWorkReceiver.GetLastWork(true),
+				Error:          nil,
+			}))
 		default:
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,

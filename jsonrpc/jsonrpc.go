@@ -33,3 +33,9 @@ func MarshalResponse(r Response) []byte {
 	resp, _ := json.Marshal(r)
 	return resp
 }
+
+// MarshalRequest creates a JSONRPC request bytes from a Request struct
+func MarshalRequest(r Request) []byte {
+	req, _ := json.Marshal(r)
+	return req
+}

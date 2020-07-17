@@ -7,6 +7,7 @@ type Configuration struct {
 	WorkreceiverBindAddr    string `envconfig:"solo_workreceiver_bind_addr" required:"true"`
 	GatewayInsecureBindAddr string `envconfig:"solo_gateway_insecure_bind_addr"`
 	GatewayPassword         string `envconfig:"solo_gateway_password" required:"true"`
+	ShareDifficulty         uint64 `envconfig:"solo_share_difficulty" default:"4000000000"`
 }
 
 // GetConfig parses the environment variables

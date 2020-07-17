@@ -10,7 +10,6 @@ import (
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/process"
 	"github.com/flexpool/solo/utils"
-	"github.com/flexpool/solo/workreceiver"
 	"github.com/sirupsen/logrus"
 )
 
@@ -60,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	workReceiver := workreceiver.NewWorkReceiver(config.WorkreceiverBindAddr)
+	workReceiver := gateway.NewWorkReceiver(config.WorkreceiverBindAddr, config.ShareDifficulty)
 	go workReceiver.Run()
 
 	log.Logger.WithFields(logrus.Fields{
@@ -88,6 +87,11 @@ func main() {
 	for _, gateway := range gateways {
 		go gateway.Run()
 	}
+
+	log.Logger.WithFields(logrus.Fields{
+		"prefix":     "workreceiver",
+		"share-diff": config.ShareDifficulty,
+	}).Info("Initialized mining engine")
 
 	go interruptHandler()
 	exitCode := <-process.ExitChan

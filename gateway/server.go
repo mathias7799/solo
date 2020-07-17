@@ -10,7 +10,6 @@ import (
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/process"
 	"github.com/flexpool/solo/utils"
-	"github.com/flexpool/solo/workreceiver"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,11 +21,11 @@ type Gateway struct {
 	tlsKeyPair         tls.Certificate
 	context            context.Context
 	cancelContextFunc  context.CancelFunc
-	parentWorkReceiver *workreceiver.WorkReceiver
+	parentWorkReceiver *WorkReceiver
 }
 
 // NewGatewayInsecure creates Non SSL gateway instance
-func NewGatewayInsecure(parentWorkReceiver *workreceiver.WorkReceiver, bind string, password string) (Gateway, error) {
+func NewGatewayInsecure(parentWorkReceiver *WorkReceiver, bind string, password string) (Gateway, error) {
 	err := utils.IsInvalidAddress(bind)
 	if err != nil {
 		return Gateway{}, err

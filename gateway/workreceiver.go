@@ -1,9 +1,11 @@
-package workreceiver
+package gateway
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"strconv"
 	"sync"
@@ -20,11 +22,30 @@ type WorkReceiver struct {
 	shuttingDown     bool
 	subscriptions    []chan []string
 	subscriptionsMux sync.Mutex
+	lastWork         []string
+	workHistory      [][]string
+	shareDiff        uint64
+	shareTargetHex   string
+}
+
+// GetLastWork returns last work
+func (w *WorkReceiver) GetLastWork(applyShareDiff bool) []string {
+	work := w.lastWork
+	// Apply Share Diff
+	if applyShareDiff {
+		work[2] = w.shareTargetHex
+	}
+
+	return work
 }
 
 // NewWorkReceiver creates new WorkReceiver instance
-func NewWorkReceiver(bind string) *WorkReceiver {
-	workReceiver := WorkReceiver{}
+func NewWorkReceiver(bind string, shareDiff uint64) *WorkReceiver {
+	workReceiver := WorkReceiver{
+		shareDiff:      shareDiff,
+		shareTargetHex: "0x" + hex.EncodeToString(utils.PadByteArrayStart(big.NewInt(0).Div(big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0)), big.NewInt(0).SetUint64(shareDiff)).Bytes(), 32)),
+		lastWork:       []string{"0x0", "0x0", "0x0", "0x0"},
+	}
 
 	mux := http.NewServeMux()
 
@@ -58,6 +79,11 @@ func NewWorkReceiver(bind string) *WorkReceiver {
 		}
 
 		var channelIndexesToClean []int
+
+		workReceiver.lastWork = parsedJSONData
+
+		workWithShareDifficulty := parsedJSONData
+		workWithShareDifficulty[2] = workReceiver.shareTargetHex
 
 		// Sending work notification to all subscribers
 		workReceiver.subscriptionsMux.Lock()
