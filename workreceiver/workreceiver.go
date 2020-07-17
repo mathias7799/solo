@@ -1,6 +1,7 @@
 package workreceiver
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -14,20 +15,15 @@ import (
 
 // WorkReceiver is a struct for the work receiver daemon
 type WorkReceiver struct {
-	bind      string
-	httpMux   *http.ServeMux
-	Exited    bool
-	ExitError error
+	httpServer   *http.Server
+	shuttingDown bool
 }
 
 // NewWorkReceiver creates new WorkReceiver instance
 func NewWorkReceiver(bind string) WorkReceiver {
-	w := WorkReceiver{
-		bind:    bind,
-		httpMux: http.NewServeMux(),
-	}
+	mux := http.NewServeMux()
 
-	w.httpMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			log.Logger.WithFields(logrus.Fields{
 				"prefix":   "workreceiver",
@@ -62,15 +58,26 @@ func NewWorkReceiver(bind string) WorkReceiver {
 		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(parsedJSONData[3]), 10))
 
 	})
-	return w
+
+	return WorkReceiver{httpServer: &http.Server{
+		Addr:    bind,
+		Handler: mux,
+	}}
 }
 
-// Start function starts the WorkReceiver
-func (w *WorkReceiver) Start() {
-	w.Exited = false
+// Run function runs the WorkReceiver
+func (w *WorkReceiver) Run() {
+	err := w.httpServer.ListenAndServe()
 
-	// Write server error immediately after exit
-	w.ExitError = http.ListenAndServe(w.bind, w.httpMux)
+	if !w.shuttingDown {
+		panic(err)
+	}
+}
 
-	w.Exited = true
+// Stop function stops the WorkReceiver
+func (w *WorkReceiver) Stop() {
+	err := w.httpServer.Shutdown(context.Background())
+	if err != nil {
+		panic(err)
+	}
 }
