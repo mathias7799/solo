@@ -17,3 +17,7 @@ TBD
 
 ### Documentation
 TBD
+
+# License
+
+GNU General Public License v3
