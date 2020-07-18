@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/flexpool/solo/db"
 	"github.com/flexpool/solo/log"
 
@@ -42,6 +43,7 @@ func NewCollector(database *db.Database, engineWaitGroup *sync.WaitGroup) *Colle
 		Context:           ctx,
 		ContextCancelFunc: cancelFunc,
 		engineWaitGroup:   engineWaitGroup,
+		Database:          database,
 	}
 	c.ResetValues()
 	return &c
@@ -72,7 +74,7 @@ func (c *Collector) Run() {
 			return
 		default:
 			currentCollectionTimestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs // Get rid of remainder
-			if prevCollectionTimestamp != currentCollectionTimestamp {
+			if prevCollectionTimestamp == currentCollectionTimestamp {
 				time.Sleep(time.Second)
 				continue
 			}
@@ -103,7 +105,7 @@ func (c *Collector) Run() {
 
 			log.Logger.WithFields(logrus.Fields{
 				"prefix":             "stats",
-				"effective-hashrate": totalCollectedHashrate,
+				"effective-hashrate": humanize.SIWithDigits(totalCollectedHashrate, 2, "H/s"),
 			}).Info("Successfully collected data.")
 			totalCollectedHashrate = 0
 
