@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/flexpool/ethash-go"
@@ -63,7 +64,7 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 	// workerName is required to know who mined the block, if there share mines it
 
 	g.parentWorkManager.workHistory.Mux.Lock()
-	fullWork, ok := g.parentWorkManager.workHistory.Map[submittedWork[0]]
+	fullWork, ok := g.parentWorkManager.workHistory.Map[submittedWork[1]]
 	g.parentWorkManager.workHistory.Mux.Unlock()
 	if !ok {
 		// Work was not requested, or is older than 8 blocks
@@ -77,15 +78,18 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 		isStale = true
 	}
 
+	fmt.Println("target", g.parentWorkManager.shareTargetBigInt)
+
 	share := Block{
 		target:      g.parentWorkManager.shareTargetBigInt,
 		hashNoNonce: common.HexToHash(fullWork[0]),
 		nonce:       utils.MustSoftHexToUint64(submittedWork[0]),
-		mixDigest:   common.HexToHash(fullWork[2]),
+		mixDigest:   common.HexToHash(submittedWork[2]),
 		number:      blockNumber,
 	}
 
 	shareIsValid, actualTarget := hasher.Verify(share)
+	fmt.Println("share", shareIsValid, actualTarget, share)
 
 	if shareIsValid {
 		block := share
