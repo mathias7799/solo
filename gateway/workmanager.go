@@ -137,14 +137,15 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 
 		workManager.lastWork = parsedJSONData.Result
 
-		workWithShareDifficulty := parsedJSONData.Result
+		workWithShareDifficulty := make([]string, 4)
+		copy(workWithShareDifficulty, parsedJSONData.Result)
 		workWithShareDifficulty[2] = workManager.shareTargetHex
 
 		// Sending work notification to all subscribers
 		workManager.subscriptionsMux.Lock()
 		for i, ch := range workManager.subscriptions {
 			if !isChanClosed(ch) {
-				ch <- parsedJSONData.Result
+				ch <- workWithShareDifficulty
 			} else {
 				channelIndexesToClean = append(channelIndexesToClean, i)
 			}
@@ -157,7 +158,6 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 			workManager.subscriptions = workManager.subscriptions[:length-1]
 		}
 		workManager.subscriptionsMux.Unlock()
-
 		workManager.workHistory.Append(parsedJSONData.Result[0], parsedJSONData.Result)
 
 		if workManager.workHistory.Len() > 8 {
