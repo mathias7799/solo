@@ -96,6 +96,9 @@ func (c *Collector) Run() {
 				}
 				db.WriteStatToBatch(batch, stat, timestamp)
 			}
+
+			c.Database.DB.Write(batch, nil)
+
 			c.Mux.Unlock()
 
 			log.Logger.WithFields(logrus.Fields{
