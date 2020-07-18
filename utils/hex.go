@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"net"
 	"strconv"
 )
@@ -40,4 +41,11 @@ func IsInvalidAddress(s string) error {
 	}
 
 	return nil
+}
+
+// HexStrToBigInt converts hex string to big.Int
+func HexStrToBigInt(hexStr string) *big.Int {
+	v := new(big.Int)
+	v.SetString(Clear0x(hexStr), 16)
+	return v
 }

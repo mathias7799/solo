@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/flexpool/solo/configuration"
-	"github.com/flexpool/solo/gateway"
+	"github.com/flexpool/solo/engine"
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/process"
 	"github.com/flexpool/solo/utils"
@@ -59,45 +59,58 @@ func main() {
 		os.Exit(1)
 	}
 
-	workReceiver := gateway.NewWorkReceiver(config.WorkreceiverBindAddr, config.ShareDifficulty)
-	go workReceiver.Run()
+	/*
 
-	log.Logger.WithFields(logrus.Fields{
-		"prefix": "workreceiver",
-		"bind":   config.WorkreceiverBindAddr,
-	}).Info("Started Work Receiver server")
+		workReceiver := gateway.NewWorkReceiver(config.WorkreceiverBindAddr, config.ShareDifficulty)
+		go workReceiver.Run()
 
-	var gateways []gateway.Gateway
-	var gatewayTmp gateway.Gateway
+		log.Logger.WithFields(logrus.Fields{
+			"prefix": "workreceiver",
+			"bind":   config.WorkreceiverBindAddr,
+		}).Info("Started Work Receiver server")
 
-	if config.GatewayInsecureBindAddr != "" {
-		gatewayTmp, err = gateway.NewGatewayInsecure(workReceiver, config.GatewayInsecureBindAddr, config.GatewayPassword)
-		if err != nil {
-			log.Logger.WithFields(logrus.Fields{
-				"prefix": "gateway",
-				"bind":   config.GatewayInsecureBindAddr,
-				"secure": "false",
-			}).Error("Unable to start gateway")
-			workReceiver.Stop()
-			os.Exit(1)
+		var gateways []gateway.Gateway
+		var gatewayTmp gateway.Gateway
+
+		if config.GatewayInsecureBindAddr != "" {
+			gatewayTmp, err = gateway.NewGatewayInsecure(workReceiver, config.GatewayInsecureBindAddr, config.GatewayPassword)
+			if err != nil {
+				log.Logger.WithFields(logrus.Fields{
+					"prefix": "gateway",
+					"bind":   config.GatewayInsecureBindAddr,
+					"secure": "false",
+				}).Error("Unable to start gateway")
+				workReceiver.Stop()
+				os.Exit(1)
+			}
+			gateways = append(gateways, gatewayTmp)
 		}
-		gateways = append(gateways, gatewayTmp)
-	}
 
-	for _, gateway := range gateways {
-		go gateway.Run()
-	}
+		for _, gateway := range gateways {
+			go gateway.Run()
+		}
 
-	log.Logger.WithFields(logrus.Fields{
-		"prefix":     "workreceiver",
-		"share-diff": config.ShareDifficulty,
-	}).Info("Initialized mining engine")
+
+		log.Logger.WithFields(logrus.Fields{
+			"prefix":     "workreceiver",
+			"share-diff": config.ShareDifficulty,
+		}).Info("Initialized mining engine")
+	*/
+
+	miningEngine, err := engine.NewMiningEngine(config.WorkreceiverBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword)
+
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{
+			"prefix": "engine",
+			"error":  err,
+		}).Error("Unable to start mining engine")
+	}
 
 	go interruptHandler()
 	exitCode := <-process.ExitChan
-	workReceiver.Stop()
-	for _, gateway := range gateways {
-		gateway.Stop()
-	}
+	miningEngine.Stop()
+	log.Logger.WithFields(logrus.Fields{
+		"prefix": "engine",
+	}).Info("Stopped mining engine")
 	os.Exit(exitCode)
 }
