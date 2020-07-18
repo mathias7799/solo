@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 
 	"github.com/flexpool/ethash-go"
@@ -78,8 +77,6 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 		isStale = true
 	}
 
-	fmt.Println("target", g.parentWorkManager.shareTargetBigInt)
-
 	share := Block{
 		target:      g.parentWorkManager.shareTargetBigInt,
 		hashNoNonce: common.HexToHash(fullWork[0]),
@@ -89,7 +86,6 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 	}
 
 	shareIsValid, actualTarget := hasher.Verify(share)
-	fmt.Println("share", shareIsValid, actualTarget, share)
 
 	if shareIsValid {
 		block := share
@@ -99,18 +95,17 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 
 		if blockValid {
 			g.submitBlock(submittedWork, blockNumber, workerName)
-		}
-
-		if g.parentWorkManager.BestShareTarget.Cmp(actualTarget) == 1 {
-			float64ActualDifficulty, _ := big.NewFloat(0).SetInt(big.NewInt(0).Div(utils.BigMax256bit, actualTarget)).Float64()
-			log.Logger.WithFields(logrus.Fields{
-				"prefix":            "gateway",
-				"actual-difficulty": humanize.SIWithDigits(float64ActualDifficulty, 2, "H"),
-			}).Info("New best share")
-			if !blockValid {
+			// TODO add block to the DB
+			g.parentWorkManager.BestShareTarget = utils.BigMax256bit
+		} else {
+			if g.parentWorkManager.BestShareTarget.Cmp(actualTarget) == 1 {
+				float64ActualDifficulty, _ := big.NewFloat(0).SetInt(big.NewInt(0).Div(utils.BigMax256bit, actualTarget)).Float64()
+				log.Logger.WithFields(logrus.Fields{
+					"prefix":            "gateway",
+					"actual-difficulty": humanize.SIWithDigits(float64ActualDifficulty, 2, "H"),
+				}).Info("New best share")
 				g.parentWorkManager.BestShareTarget = actualTarget
-			} else {
-				g.parentWorkManager.BestShareTarget = utils.BigMax256bit
+				// TODO add best share to db
 			}
 		}
 
