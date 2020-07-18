@@ -72,6 +72,11 @@ type WorkManager struct {
 	engineWaitGroup   *sync.WaitGroup
 }
 
+// OpenEthereumWorkNotification represents the struct of OpenEthereum work notification
+type OpenEthereumWorkNotification struct {
+	Result []string `json:"result"`
+}
+
 // GetLastWork returns last work
 func (w *WorkManager) GetLastWork(applyShareDiff bool) []string {
 	work := w.lastWork
@@ -109,7 +114,7 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 			return
 		}
 		data, err := ioutil.ReadAll(r.Body)
-		var parsedJSONData []string
+		var parsedJSONData OpenEthereumWorkNotification
 		err = json.Unmarshal(data, &parsedJSONData)
 		if err != nil {
 			log.Logger.WithFields(logrus.Fields{
@@ -119,27 +124,27 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 			return
 		}
 
-		if len(parsedJSONData) != 4 {
+		if len(parsedJSONData.Result) != 4 {
 			log.Logger.WithFields(logrus.Fields{
 				"prefix":   "workreceiver",
 				"expected": 4,
-				"got":      len(parsedJSONData),
+				"got":      len(parsedJSONData.Result),
 			}).Error("Invalid work notification length (Ensure that you're using OpenEthereum)")
 			return
 		}
 
 		var channelIndexesToClean []int
 
-		workManager.lastWork = parsedJSONData
+		workManager.lastWork = parsedJSONData.Result
 
-		workWithShareDifficulty := parsedJSONData
+		workWithShareDifficulty := parsedJSONData.Result
 		workWithShareDifficulty[2] = workManager.shareTargetHex
 
 		// Sending work notification to all subscribers
 		workManager.subscriptionsMux.Lock()
 		for i, ch := range workManager.subscriptions {
 			if !isChanClosed(ch) {
-				ch <- parsedJSONData
+				ch <- parsedJSONData.Result
 			} else {
 				channelIndexesToClean = append(channelIndexesToClean, i)
 			}
@@ -153,7 +158,7 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 		}
 		workManager.subscriptionsMux.Unlock()
 
-		workManager.workHistory.Append(parsedJSONData[0], parsedJSONData)
+		workManager.workHistory.Append(parsedJSONData.Result[0], parsedJSONData.Result)
 
 		if workManager.workHistory.Len() > 8 {
 			// Removing unneeded (9th in history) work
@@ -162,8 +167,8 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 
 		log.Logger.WithFields(logrus.Fields{
 			"prefix":      "workreceiver",
-			"header-hash": parsedJSONData[0][2:10],
-		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(parsedJSONData[3]), 10))
+			"header-hash": parsedJSONData.Result[0][2:10],
+		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(parsedJSONData.Result[3]), 10))
 	})
 
 	workManager.httpServer = &http.Server{
