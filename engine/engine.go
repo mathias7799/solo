@@ -39,8 +39,8 @@ func NewMiningEngine(workreceiverBind string, shareDifficulty uint64, insecureSt
 	return &engine, nil
 }
 
-// Run starts the mining engine
-func (e *MiningEngine) Run() {
+// Start starts the mining engine
+func (e *MiningEngine) Start() {
 	// Starting work receiver
 	go e.Workreceiver.Run()
 
@@ -52,11 +52,6 @@ func (e *MiningEngine) Run() {
 	for _, g := range e.Gateways {
 		go g.Run()
 	}
-
-	log.Logger.WithFields(logrus.Fields{
-		"prefix":     "engine",
-		"share-diff": e.shareDifficulty,
-	}).Info("Initialized mining engine")
 }
 
 // Stop stops the mining engine

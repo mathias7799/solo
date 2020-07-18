@@ -6,6 +6,7 @@ import (
 
 	"github.com/flexpool/solo/jsonrpc"
 	"github.com/flexpool/solo/log"
+	"github.com/flexpool/solo/types"
 	"github.com/sirupsen/logrus"
 )
 
@@ -111,13 +112,44 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 
 		switch request.Method {
 		case "eth_getWork":
-
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
 				ID:             request.ID,
 				Result:         g.parentWorkReceiver.GetLastWork(true),
 				Error:          nil,
 			}))
+		case "eth_submitWork":
+			if len(request.Params) < 3 || len(request.Params[0]) != 18 || len(request.Params[1]) != 66 || len(request.Params[2]) != 66 {
+				write(conn, GetInvalidParamsError(request.ID))
+			} else {
+				shareType, err := g.submitShare(request.Params, workerName)
+				if err != nil {
+					write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
+						JSONRPCVersion: jsonrpc.Version,
+						ID:             request.ID,
+						Result:         nil,
+						Error:          err.Error(),
+					}))
+					continue
+				}
+
+				if shareType == 0 || shareType == 1 {
+					write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
+						JSONRPCVersion: jsonrpc.Version,
+						ID:             request.ID,
+						Result:         true,
+						Error:          nil,
+					}))
+				} else {
+					write(conn, GetInvalidShareError(request.ID))
+				}
+
+				log.Logger.WithFields(logrus.Fields{
+					"prefix": "gateway",
+					"worker": workerName,
+					"ip":     ip,
+				}).Info("Received " + types.ShareTypeNameMap[shareType] + " share")
+			}
 		default:
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
