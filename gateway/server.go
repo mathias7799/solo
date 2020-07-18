@@ -15,17 +15,17 @@ import (
 
 // Gateway is a stratum proxy that servers workers
 type Gateway struct {
-	bind               string
-	stratumPassword    string
-	isSecure           bool
-	tlsKeyPair         tls.Certificate
-	context            context.Context
-	cancelContextFunc  context.CancelFunc
-	parentWorkReceiver *WorkReceiver
+	bind              string
+	stratumPassword   string
+	isSecure          bool
+	tlsKeyPair        tls.Certificate
+	context           context.Context
+	cancelContextFunc context.CancelFunc
+	parentWorkManager *WorkManager
 }
 
 // NewGatewayInsecure creates Non SSL gateway instance
-func NewGatewayInsecure(parentWorkReceiver *WorkReceiver, bind string, password string) (Gateway, error) {
+func NewGatewayInsecure(parentWorkManager *WorkManager, bind string, password string) (Gateway, error) {
 	err := utils.IsInvalidAddress(bind)
 	if err != nil {
 		return Gateway{}, err
@@ -33,7 +33,7 @@ func NewGatewayInsecure(parentWorkReceiver *WorkReceiver, bind string, password 
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
-	return Gateway{bind: bind, stratumPassword: password, isSecure: false, context: ctx, cancelContextFunc: cancelFunc, parentWorkReceiver: parentWorkReceiver}, nil
+	return Gateway{bind: bind, stratumPassword: password, isSecure: false, context: ctx, cancelContextFunc: cancelFunc, parentWorkManager: parentWorkManager}, nil
 }
 
 // Run runs the Gateway

@@ -28,6 +28,13 @@ func UnmarshalRequest(b []byte) (Request, error) {
 	return req, err
 }
 
+// UnmarshalResponse parses the JSONRPC request, and returns it as a Response struct
+func UnmarshalResponse(b []byte) (Response, error) {
+	var resp Response
+	err := json.Unmarshal(b, &resp)
+	return resp, err
+}
+
 // MarshalResponse creates a JSONRPC response bytes from a Response struct
 func MarshalResponse(r Response) []byte {
 	resp, _ := json.Marshal(r)

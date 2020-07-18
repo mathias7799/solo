@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/flexpool/solo/log"
+	"github.com/flexpool/solo/nodeapi"
 	"github.com/flexpool/solo/utils"
 
 	"github.com/sirupsen/logrus"
@@ -53,8 +54,8 @@ func (o *OrderedWorkMap) Len() int {
 	return out
 }
 
-// WorkReceiver is a struct for the work receiver daemon
-type WorkReceiver struct {
+// WorkManager is a struct for the work manager daemon
+type WorkManager struct {
 	httpServer        *http.Server
 	shuttingDown      bool
 	subscriptions     []chan []string
@@ -66,10 +67,11 @@ type WorkReceiver struct {
 	shareTargetBigInt *big.Int
 	shareDiffBigInt   *big.Int
 	BestShareTarget   *big.Int
+	Node              *nodeapi.Node
 }
 
 // GetLastWork returns last work
-func (w *WorkReceiver) GetLastWork(applyShareDiff bool) []string {
+func (w *WorkManager) GetLastWork(applyShareDiff bool) []string {
 	work := w.lastWork
 	// Apply Share Diff
 	if applyShareDiff {
@@ -79,16 +81,17 @@ func (w *WorkReceiver) GetLastWork(applyShareDiff bool) []string {
 	return work
 }
 
-// NewWorkReceiver creates new WorkReceiver instance
-func NewWorkReceiver(bind string, shareDiff uint64) *WorkReceiver {
+// NewWorkManager creates new WorkReceiver instance
+func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node) *WorkManager {
 	shareTargetBigInt := big.NewInt(0).Div(big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0)), big.NewInt(0).SetUint64(shareDiff))
-	workReceiver := WorkReceiver{
+	workManager := WorkManager{
 		shareDiff:         shareDiff,
 		shareDiffBigInt:   big.NewInt(0).SetUint64(shareDiff),
 		shareTargetBigInt: shareTargetBigInt,
 		shareTargetHex:    "0x" + hex.EncodeToString(utils.PadByteArrayStart(shareTargetBigInt.Bytes(), 32)),
 		lastWork:          []string{"0x0", "0x0", "0x0", "0x0"},
 		BestShareTarget:   big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0)),
+		Node:              node,
 	}
 
 	mux := http.NewServeMux()
@@ -124,14 +127,14 @@ func NewWorkReceiver(bind string, shareDiff uint64) *WorkReceiver {
 
 		var channelIndexesToClean []int
 
-		workReceiver.lastWork = parsedJSONData
+		workManager.lastWork = parsedJSONData
 
 		workWithShareDifficulty := parsedJSONData
-		workWithShareDifficulty[2] = workReceiver.shareTargetHex
+		workWithShareDifficulty[2] = workManager.shareTargetHex
 
 		// Sending work notification to all subscribers
-		workReceiver.subscriptionsMux.Lock()
-		for i, ch := range workReceiver.subscriptions {
+		workManager.subscriptionsMux.Lock()
+		for i, ch := range workManager.subscriptions {
 			if !isChanClosed(ch) {
 				ch <- parsedJSONData
 			} else {
@@ -139,19 +142,19 @@ func NewWorkReceiver(bind string, shareDiff uint64) *WorkReceiver {
 			}
 		}
 
-		length := len(workReceiver.subscriptions)
+		length := len(workManager.subscriptions)
 
 		for _, chIndex := range channelIndexesToClean {
-			workReceiver.subscriptions[chIndex] = workReceiver.subscriptions[length-1]
-			workReceiver.subscriptions = workReceiver.subscriptions[:length-1]
+			workManager.subscriptions[chIndex] = workManager.subscriptions[length-1]
+			workManager.subscriptions = workManager.subscriptions[:length-1]
 		}
-		workReceiver.subscriptionsMux.Unlock()
+		workManager.subscriptionsMux.Unlock()
 
-		workReceiver.workHistory.Append(parsedJSONData[0], parsedJSONData)
+		workManager.workHistory.Append(parsedJSONData[0], parsedJSONData)
 
-		if workReceiver.workHistory.Len() > 8 {
+		if workManager.workHistory.Len() > 8 {
 			// Removing unneeded (9th in history) work
-			workReceiver.workHistory.Shift()
+			workManager.workHistory.Shift()
 		}
 
 		log.Logger.WithFields(logrus.Fields{
@@ -160,18 +163,18 @@ func NewWorkReceiver(bind string, shareDiff uint64) *WorkReceiver {
 		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(parsedJSONData[3]), 10))
 	})
 
-	workReceiver.httpServer = &http.Server{
+	workManager.httpServer = &http.Server{
 		Addr:    bind,
 		Handler: mux,
 	}
 
-	workReceiver.workHistory.Init()
+	workManager.workHistory.Init()
 
-	return &workReceiver
+	return &workManager
 }
 
 // Run function runs the WorkReceiver
-func (w *WorkReceiver) Run() {
+func (w *WorkManager) Run() {
 	err := w.httpServer.ListenAndServe()
 
 	if !w.shuttingDown {
@@ -180,7 +183,7 @@ func (w *WorkReceiver) Run() {
 }
 
 // Stop function stops the WorkReceiver
-func (w *WorkReceiver) Stop() {
+func (w *WorkManager) Stop() {
 	err := w.httpServer.Shutdown(context.Background())
 	if err != nil {
 		panic(err)
@@ -188,7 +191,7 @@ func (w *WorkReceiver) Stop() {
 }
 
 // SubscribeNotifications subscribes the given channel to the work receiver
-func (w *WorkReceiver) SubscribeNotifications(ch chan []string) {
+func (w *WorkManager) SubscribeNotifications(ch chan []string) {
 	w.subscriptions = append(w.subscriptions, ch)
 }
 

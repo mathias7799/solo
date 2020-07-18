@@ -25,10 +25,12 @@ func NewNode(httpRPCEndpoint string) (*Node, error) {
 	return &Node{httpRPCEndpoint: httpRPCEndpoint}, nil
 }
 
-func (n *Node) makeHTTPRPCRequest() ([]byte, error) {
+func (n *Node) makeHTTPRPCRequest(method string, params []string) (interface{}, error) {
 	req := jsonrpc.MarshalRequest(jsonrpc.Request{
 		JSONRPCVersion: jsonrpc.Version,
 		ID:             rand.Intn(99999999),
+		Method:         method,
+		Params:         params,
 	})
 
 	response, err := http.Post(n.httpRPCEndpoint, "application/json", bytes.NewBuffer(req))
@@ -42,12 +44,25 @@ func (n *Node) makeHTTPRPCRequest() ([]byte, error) {
 		return nil, err
 	}
 
-	// Additional error unmarshaling
+	// Additional error check
+	parsedData, err := jsonrpc.UnmarshalResponse(data)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal node's response")
+	}
 
-	return data, nil
+	if parsedData.Error != nil {
+		return nil, errors.New("unexpected node response: " + string(data))
+	}
+
+	return parsedData.Result, nil
 }
 
 // SubmitWork delegates to `eth_submitWork` API method, and submits work
-func (n *Node) SubmitWork(work []string) {
+func (n *Node) SubmitWork(work []string) (bool, error) {
+	data, err := n.makeHTTPRPCRequest("eth_submitWork", work)
+	if err != nil {
+		return false, err
+	}
 
+	return data.(bool), nil
 }

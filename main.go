@@ -44,7 +44,7 @@ func main() {
 	}
 
 	// Check the config
-	err = utils.IsInvalidAddress(config.WorkreceiverBindAddr)
+	err = utils.IsInvalidAddress(config.WorkmanagerNotificationsBindAddr)
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{
 			"prefix": "config",
@@ -60,7 +60,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	miningEngine, err := engine.NewMiningEngine(config.WorkreceiverBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword)
+	miningEngine, err := engine.NewMiningEngine(config.WorkmanagerNotificationsBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword, config.NodeHTTPRPC)
 
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{

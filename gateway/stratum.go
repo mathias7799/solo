@@ -20,7 +20,7 @@ func (g *Gateway) RunWorkSender(conn net.Conn) {
 	// Creating a channel and subscribing it to the work receiver
 	ch := make(chan []string)
 
-	g.parentWorkReceiver.SubscribeNotifications(ch)
+	g.parentWorkManager.SubscribeNotifications(ch)
 
 	for {
 		work := <-ch
@@ -116,7 +116,7 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
 				ID:             request.ID,
-				Result:         g.parentWorkReceiver.GetLastWork(true),
+				Result:         g.parentWorkManager.GetLastWork(true),
 				Error:          nil,
 			}))
 		case "eth_submitWork":
