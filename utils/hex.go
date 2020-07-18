@@ -47,5 +47,8 @@ func IsInvalidAddress(s string) error {
 func HexStrToBigInt(hexStr string) *big.Int {
 	v := new(big.Int)
 	v.SetString(Clear0x(hexStr), 16)
+	if v == nil {
+		return big.NewInt(0)
+	}
 	return v
 }
