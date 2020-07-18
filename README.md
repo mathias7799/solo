@@ -11,7 +11,7 @@ A lightweight portable self-hosted SOLO Ethereum Mining Pool.
 - [ ] Block submission
 
 ### Analytics
-- [ ] Accept hashrate reports
+- [x] Accept hashrate reports
 - [ ] Implement database and stats collection
 - TBD
 
