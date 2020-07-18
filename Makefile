@@ -1,2 +1,2 @@
 docker-image:
-	docker build -t solo .
+	docker build -t solo . --no-cache
