@@ -145,6 +145,21 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 					write(conn, GetInvalidShareError(request.ID))
 				}
 
+				g.statsCollector.Mux.Lock()
+				pendingStat := g.statsCollector.PendingStats[workerName]
+
+				switch shareType {
+				case types.ShareValid:
+					pendingStat.ValidShares++
+				case types.ShareStale:
+					pendingStat.StaleShares++
+				case types.ShareInvalid:
+					pendingStat.InvalidShares++
+				}
+
+				g.statsCollector.PendingStats[workerName] = pendingStat
+				g.statsCollector.Mux.Unlock()
+
 				log.Logger.WithFields(logrus.Fields{
 					"prefix": "gateway",
 					"worker": workerName,
