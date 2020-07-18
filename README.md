@@ -10,15 +10,21 @@ Developed with ❤️ to make it as fast as Flexpool.
 ### Core Mining Engine
 - [x] Worker Authentication & Work Receiver
 - [x] Share verification
-- [ ] Block submission
+- [x] Block submission
+- TBD
 
 ### Analytics
 - [x] Accept hashrate reports
-- [ ] Implement database and stats collection
+- [x] Collect worker statistics
+- [ ] Collect mined blocks and best shares
+- [ ] Implement querying
 - TBD
 
-### Rich Front End
-TBD
+### Front End
+- [ ] General & Per worker Statistics
+- [ ] Network statistics
+- [ ] Node Health monitoring 
+- TBD
 
 ### Documentation
 TBD
