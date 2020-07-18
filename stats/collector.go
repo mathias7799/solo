@@ -13,6 +13,7 @@ import (
 )
 
 const statCollectionPeriodSecs = 60 // Collect stats every minute
+const keepStatsForSecs = 86400      // Keep stats for one day
 
 // Collector is a stat collection daemon struct
 type Collector struct {
@@ -106,6 +107,8 @@ func (c *Collector) Run() {
 				"effective-hashrate": totalCollectedHashrate,
 			}).Info("Successfully collected data.")
 			totalCollectedHashrate = 0
+
+			c.Database.PruneStats(keepStatsForSecs)
 		}
 	}
 }
