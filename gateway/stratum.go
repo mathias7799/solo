@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 
 	"github.com/flexpool/solo/jsonrpc"
@@ -150,6 +151,15 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 					"ip":     ip,
 				}).Info("Received " + types.ShareTypeNameMap[shareType] + " share")
 			}
+		case "eth_submitHashrate":
+			// Return true
+			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
+				JSONRPCVersion: jsonrpc.Version,
+				ID:             request.ID,
+				Result:         true,
+				Error:          nil,
+			}))
+			fmt.Println("eth_submitHashrate was called, but is not implemented")
 		default:
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
