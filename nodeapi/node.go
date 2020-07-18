@@ -19,7 +19,7 @@ type Node struct {
 // NewNode creates a new Node instance
 func NewNode(httpRPCEndpoint string) (*Node, error) {
 	if _, err := url.Parse(httpRPCEndpoint); err != nil {
-		return nil, errors.Wrap(err, "Invalid HTTP URL")
+		return nil, errors.New("invalid HTTP URL")
 	}
 
 	return &Node{httpRPCEndpoint: httpRPCEndpoint}, nil

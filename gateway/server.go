@@ -5,10 +5,12 @@ import (
 	"crypto/tls"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/process"
+	"github.com/flexpool/solo/stats"
 	"github.com/flexpool/solo/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -22,10 +24,12 @@ type Gateway struct {
 	context           context.Context
 	cancelContextFunc context.CancelFunc
 	parentWorkManager *WorkManager
+	statsCollector    *stats.Collector
+	engineWaitGroup   *sync.WaitGroup
 }
 
 // NewGatewayInsecure creates Non SSL gateway instance
-func NewGatewayInsecure(parentWorkManager *WorkManager, bind string, password string) (Gateway, error) {
+func NewGatewayInsecure(parentWorkManager *WorkManager, bind string, password string, statsCollector *stats.Collector, engineWaitGroup *sync.WaitGroup) (Gateway, error) {
 	err := utils.IsInvalidAddress(bind)
 	if err != nil {
 		return Gateway{}, err
@@ -33,11 +37,15 @@ func NewGatewayInsecure(parentWorkManager *WorkManager, bind string, password st
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
-	return Gateway{bind: bind, stratumPassword: password, isSecure: false, context: ctx, cancelContextFunc: cancelFunc, parentWorkManager: parentWorkManager}, nil
+	return Gateway{bind: bind, stratumPassword: password, isSecure: false, context: ctx, cancelContextFunc: cancelFunc, parentWorkManager: parentWorkManager, statsCollector: statsCollector, engineWaitGroup: engineWaitGroup}, nil
 }
 
 // Run runs the Gateway
 func (g *Gateway) Run() {
+	// Wait group
+	g.engineWaitGroup.Add(1)
+	defer g.engineWaitGroup.Done()
+
 	laddr, err := net.ResolveTCPAddr("tcp", g.bind)
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{
@@ -77,6 +85,7 @@ func (g *Gateway) Run() {
 				"prefix": "gateway",
 				"secure": g.isSecure,
 			}).Info("Stopped server")
+			return
 		default:
 			listener.SetDeadline(time.Now().Add(time.Second))
 

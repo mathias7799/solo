@@ -13,6 +13,7 @@ import (
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
 	"github.com/flexpool/solo/utils"
+	"github.com/pkg/errors"
 
 	"github.com/sirupsen/logrus"
 )
@@ -68,6 +69,7 @@ type WorkManager struct {
 	shareDiffBigInt   *big.Int
 	BestShareTarget   *big.Int
 	Node              *nodeapi.Node
+	engineWaitGroup   *sync.WaitGroup
 }
 
 // GetLastWork returns last work
@@ -82,7 +84,7 @@ func (w *WorkManager) GetLastWork(applyShareDiff bool) []string {
 }
 
 // NewWorkManager creates new WorkReceiver instance
-func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node) *WorkManager {
+func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWaitGroup *sync.WaitGroup) *WorkManager {
 	shareTargetBigInt := big.NewInt(0).Div(big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0)), big.NewInt(0).SetUint64(shareDiff))
 	workManager := WorkManager{
 		shareDiff:         shareDiff,
@@ -92,6 +94,7 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node) *WorkMana
 		lastWork:          []string{"0x0", "0x0", "0x0", "0x0"},
 		BestShareTarget:   big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0)),
 		Node:              node,
+		engineWaitGroup:   engineWaitGroup,
 	}
 
 	mux := http.NewServeMux()
@@ -175,19 +178,22 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node) *WorkMana
 
 // Run function runs the WorkReceiver
 func (w *WorkManager) Run() {
+	w.engineWaitGroup.Add(1)
 	err := w.httpServer.ListenAndServe()
 
 	if !w.shuttingDown {
-		panic(err)
+		panic(errors.Wrap(err, "Server shut down unexpectedly"))
 	}
 }
 
 // Stop function stops the WorkReceiver
 func (w *WorkManager) Stop() {
+	w.shuttingDown = true
 	err := w.httpServer.Shutdown(context.Background())
 	if err != nil {
 		panic(err)
 	}
+	w.engineWaitGroup.Done()
 }
 
 // SubscribeNotifications subscribes the given channel to the work receiver

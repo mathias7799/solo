@@ -5,7 +5,6 @@ import (
 	"os/signal"
 	"strconv"
 
-	"github.com/dustin/go-humanize"
 	"github.com/flexpool/solo/configuration"
 	"github.com/flexpool/solo/engine"
 	"github.com/flexpool/solo/log"
@@ -14,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func interruptHandler() {
+func interruptHandler(engine *engine.MiningEngine) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 	for i := 0; i < 10; i++ {
@@ -60,26 +59,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	miningEngine, err := engine.NewMiningEngine(config.WorkmanagerNotificationsBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword, config.NodeHTTPRPC)
-
+	miningEngine, err := engine.NewMiningEngine(config.WorkmanagerNotificationsBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword, config.NodeHTTPRPC, config.DBPath)
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{
 			"prefix": "engine",
-			"error":  err,
-		}).Error("Unable to create a mining engine")
+			"error":  err.Error(),
+		}).Error("Unable to initialize the mining engine")
+		os.Exit(1)
 	}
 
 	miningEngine.Start()
-	log.Logger.WithFields(logrus.Fields{
-		"prefix":     "engine",
-		"share-diff": humanize.SIWithDigits(float64(config.ShareDifficulty), 2, "H"),
-	}).Info("Started mining engine")
 
-	go interruptHandler()
+	go interruptHandler(miningEngine)
 	exitCode := <-process.ExitChan
+
 	miningEngine.Stop()
 	log.Logger.WithFields(logrus.Fields{
 		"prefix": "engine",
 	}).Info("Stopped mining engine")
+
 	os.Exit(exitCode)
 }
