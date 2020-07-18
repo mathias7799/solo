@@ -16,6 +16,43 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// OrderedWorkMap is used to store work history, and have an ability to prune unneeded work
+type OrderedWorkMap struct {
+	Map   map[string][]string
+	Order []string
+	Mux   sync.Mutex
+}
+
+// Init initializes the OrderedWorkMap
+func (o *OrderedWorkMap) Init() {
+	o.Map = make(map[string][]string)
+}
+
+// Append appends new work to the OrderedWorkMap
+func (o *OrderedWorkMap) Append(headerHash string, work []string) {
+	o.Mux.Lock()
+	o.Map[headerHash] = work
+	o.Order = append(o.Order, headerHash)
+	o.Mux.Unlock()
+}
+
+// Shift removes the first OrderedWorkMap key
+func (o *OrderedWorkMap) Shift() {
+	o.Mux.Lock()
+	headerHash := o.Order[0]
+	delete(o.Map, headerHash)
+	o.Order = o.Order[1:]
+	o.Mux.Unlock()
+}
+
+// Len returns the OrderedWorkMap length
+func (o *OrderedWorkMap) Len() int {
+	o.Mux.Lock()
+	out := len(o.Order)
+	o.Mux.Unlock()
+	return out
+}
+
 // WorkReceiver is a struct for the work receiver daemon
 type WorkReceiver struct {
 	httpServer       *http.Server
@@ -23,7 +60,7 @@ type WorkReceiver struct {
 	subscriptions    []chan []string
 	subscriptionsMux sync.Mutex
 	lastWork         []string
-	workHistory      [][]string
+	workHistory      OrderedWorkMap
 	shareDiff        uint64
 	shareTargetHex   string
 }
@@ -103,17 +140,25 @@ func NewWorkReceiver(bind string, shareDiff uint64) *WorkReceiver {
 		}
 		workReceiver.subscriptionsMux.Unlock()
 
+		workReceiver.workHistory.Append(parsedJSONData[0], parsedJSONData)
+
+		if workReceiver.workHistory.Len() > 8 {
+			// Removing unneeded (9th in history) work
+			workReceiver.workHistory.Shift()
+		}
+
 		log.Logger.WithFields(logrus.Fields{
 			"prefix":      "workreceiver",
 			"header-hash": parsedJSONData[0][2:10],
 		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(parsedJSONData[3]), 10))
-
 	})
 
 	workReceiver.httpServer = &http.Server{
 		Addr:    bind,
 		Handler: mux,
 	}
+
+	workReceiver.workHistory.Init()
 
 	return &workReceiver
 }
