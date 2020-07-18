@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"strconv"
 
+	"github.com/dustin/go-humanize"
 	"github.com/flexpool/solo/configuration"
 	"github.com/flexpool/solo/engine"
 	"github.com/flexpool/solo/log"
@@ -59,52 +60,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	/*
-
-		workReceiver := gateway.NewWorkReceiver(config.WorkreceiverBindAddr, config.ShareDifficulty)
-		go workReceiver.Run()
-
-		log.Logger.WithFields(logrus.Fields{
-			"prefix": "workreceiver",
-			"bind":   config.WorkreceiverBindAddr,
-		}).Info("Started Work Receiver server")
-
-		var gateways []gateway.Gateway
-		var gatewayTmp gateway.Gateway
-
-		if config.GatewayInsecureBindAddr != "" {
-			gatewayTmp, err = gateway.NewGatewayInsecure(workReceiver, config.GatewayInsecureBindAddr, config.GatewayPassword)
-			if err != nil {
-				log.Logger.WithFields(logrus.Fields{
-					"prefix": "gateway",
-					"bind":   config.GatewayInsecureBindAddr,
-					"secure": "false",
-				}).Error("Unable to start gateway")
-				workReceiver.Stop()
-				os.Exit(1)
-			}
-			gateways = append(gateways, gatewayTmp)
-		}
-
-		for _, gateway := range gateways {
-			go gateway.Run()
-		}
-
-
-		log.Logger.WithFields(logrus.Fields{
-			"prefix":     "workreceiver",
-			"share-diff": config.ShareDifficulty,
-		}).Info("Initialized mining engine")
-	*/
-
 	miningEngine, err := engine.NewMiningEngine(config.WorkreceiverBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword)
 
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{
 			"prefix": "engine",
 			"error":  err,
-		}).Error("Unable to start mining engine")
+		}).Error("Unable to create a mining engine")
 	}
+
+	miningEngine.Start()
+	log.Logger.WithFields(logrus.Fields{
+		"prefix":     "engine",
+		"share-diff": humanize.SIWithDigits(float64(config.ShareDifficulty), 2, "H"),
+	}).Info("Started mining engine")
 
 	go interruptHandler()
 	exitCode := <-process.ExitChan
