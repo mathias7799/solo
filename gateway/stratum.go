@@ -2,12 +2,13 @@ package gateway
 
 import (
 	"bufio"
-	"fmt"
+	"math/big"
 	"net"
 
 	"github.com/flexpool/solo/jsonrpc"
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/types"
+	"github.com/flexpool/solo/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -167,14 +168,26 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 				}).Info("Received " + types.ShareTypeNameMap[shareType] + " share")
 			}
 		case "eth_submitHashrate":
-			// Return true
+			if len(request.Params) < 1 {
+				write(conn, GetInvalidParamsError(request.ID))
+				continue
+			}
+
+			reportedHashrateBigInt := utils.HexStrToBigInt(request.Params[0])
+
+			g.statsCollector.Mux.Lock()
+			pendingStat := g.statsCollector.PendingStats[workerName]
+			pendingStat.ReportedHashrate, _ = big.NewFloat(0).SetInt(reportedHashrateBigInt).Float64()
+			g.statsCollector.PendingStats[workerName] = pendingStat
+			g.statsCollector.Mux.Unlock()
+
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
 				ID:             request.ID,
 				Result:         true,
 				Error:          nil,
 			}))
-			fmt.Println("eth_submitHashrate was called, but is not implemented")
+
 		default:
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
