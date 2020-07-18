@@ -1,6 +1,8 @@
 # Flexpool Solo (WIP)
 A lightweight portable self-hosted SOLO Ethereum Mining Pool.
 
+Developed with ❤️ to make it as fast as Flexpool.
+
 > WARNING: This project is currently under development
 
 # TODO
