@@ -2,7 +2,8 @@ FROM golang:1.14-alpine as builder
 
 ADD . /src/app
 
-RUN cd /src/app && go build
+RUN apk add build-base; \
+    cd /src/app && go build
 
 FROM alpine:3
 
