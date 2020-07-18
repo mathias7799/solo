@@ -23,7 +23,7 @@ func interruptHandler() {
 			log.Logger.Info("Caught interrupt, exitting...")
 			process.ExitChan <- 2
 		} else {
-			log.Logger.Info("Caught interrupt. Press Ctrl+C " + strconv.Itoa(i) + " times to panic.")
+			log.Logger.Info("Caught interrupt. Press Ctrl+C " + strconv.Itoa(10-i) + " times to panic.")
 		}
 	}
 
