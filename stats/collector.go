@@ -60,6 +60,8 @@ func (c *Collector) Run() {
 		"prefix": "stats",
 	}).Info("Started Stats Collector")
 
+	var totalCollectedHashrate float64
+
 	for {
 		select {
 		case <-c.Context.Done():
@@ -81,18 +83,26 @@ func (c *Collector) Run() {
 			batch := new(leveldb.Batch)
 			for workerName, pendingStat := range c.PendingStats {
 				timestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs // Get rid of remainder
+				effectiveHashrate := float64(pendingStat.ValidShares) * float64(c.ShareDifficulty)
+				totalCollectedHashrate += effectiveHashrate
 				stat := db.Stat{
 					WorkerName:        workerName,
 					ValidShareCount:   pendingStat.ValidShares,
 					StaleShareCount:   pendingStat.StaleShares,
 					InvalidShareCount: pendingStat.InvalidShares,
 					ReportedHashrate:  pendingStat.ReportedHashrate,
-					EffectiveHashrate: float64(pendingStat.ValidShares) * float64(c.ShareDifficulty),
+					EffectiveHashrate: effectiveHashrate,
 					IPAddress:         pendingStat.IPAddress,
 				}
 				db.WriteStatToBatch(batch, stat, timestamp)
 			}
 			c.Mux.Unlock()
+
+			log.Logger.WithFields(logrus.Fields{
+				"prefix":             "stats",
+				"effective-hashrate": totalCollectedHashrate,
+			}).Info("Successfully collected data.")
+			totalCollectedHashrate = 0
 		}
 	}
 }
