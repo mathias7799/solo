@@ -31,4 +31,4 @@ TBD
 
 # License
 
-GNU General Public License v3
+GNU Affero General Public License v3.0
