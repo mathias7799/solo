@@ -29,12 +29,6 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-const statPrefix = "stat__"
-const bestSharePrefix = "best__"
-const minedBlockPrefix = "block__"
-
-const minedValidSharesKey = "mined_valid_shares"
-
 // Stat represents an interface for a stat DB object
 type Stat struct {
 	WorkerName        string  `msgpack:"worker_name"`
@@ -69,20 +63,20 @@ type Block struct {
 // WriteStatToBatch writes worker stat object to the LevelDB batch
 func WriteStatToBatch(batch *leveldb.Batch, stat Stat, timestamp int64) {
 	data, _ := msgpack.Marshal(stat)
-	key := statPrefix + stat.WorkerName + "_" + strconv.FormatInt(timestamp, 10)
+	key := StatPrefix + stat.WorkerName + "_" + strconv.FormatInt(timestamp, 10)
 	batch.Put([]byte(key), data)
 }
 
 // WriteBestShareToBatch writes best share object to the LevelDB batch
 func WriteBestShareToBatch(batch *leveldb.Batch, bestShare BestShare, timestamp int64) {
 	data, _ := msgpack.Marshal(bestShare)
-	key := bestSharePrefix + bestShare.WorkerName + "_" + strconv.FormatInt(timestamp, 10) + "_" + strconv.FormatUint(rand.Uint64(), 16)
+	key := BestSharePrefix + bestShare.WorkerName + "_" + strconv.FormatInt(timestamp, 10) + "_" + strconv.FormatUint(rand.Uint64(), 16)
 	batch.Put([]byte(key), data)
 }
 
 // PruneStats removes data older than
 func (db *Database) PruneStats(deleteDataOlderThanSecs int64) {
-	iter := db.DB.NewIterator(util.BytesPrefix([]byte(statPrefix)), nil)
+	iter := db.DB.NewIterator(util.BytesPrefix([]byte(StatPrefix)), nil)
 
 	deleteWithTimestampLowerThan := time.Now().Unix() - deleteDataOlderThanSecs
 
@@ -91,13 +85,15 @@ func (db *Database) PruneStats(deleteDataOlderThanSecs int64) {
 		keySplitted := strings.Split(string(key), "_")
 		timestamp, err := strconv.ParseInt(keySplitted[len(keySplitted)-1], 10, 64)
 		if err != nil {
-			panic("Database corruption")
+			panic(errors.Wrap(err, "Database is corrupted"))
 		}
 
 		if timestamp < deleteWithTimestampLowerThan {
 			db.DB.Delete(key, nil)
 		}
 	}
+
+	iter.Release()
 }
 
 // WriteMinedBlock writes mined block to the database
@@ -108,21 +104,21 @@ func (db *Database) WriteMinedBlock(block Block) error {
 		panic(err)
 	}
 
-	key := minedBlockPrefix + block.Hash
+	key := MinedBlockPrefix + block.Hash
 
 	return db.DB.Put([]byte(key), data, nil)
 }
 
 // IncrValidShares increments mined valid shares counter (used to precisely calculate luck)
 func (db *Database) IncrValidShares() error {
-	prevValBytes, _ := db.DB.Get([]byte(minedValidSharesKey), nil)
+	prevValBytes, _ := db.DB.Get([]byte(MinedValidSharesKey), nil)
 	prevVal, _ := strconv.ParseUint(string(prevValBytes), 10, 64)
-	return db.DB.Put([]byte(minedValidSharesKey), []byte(string(strconv.FormatUint(prevVal+1, 10))), nil)
+	return db.DB.Put([]byte(MinedValidSharesKey), []byte(string(strconv.FormatUint(prevVal+1, 10))), nil)
 }
 
 // GetValidSharesThenReset gets the mined valid shares counter and resets it
 func (db *Database) GetValidSharesThenReset() (uint64, error) {
-	valBytes, err := db.DB.Get([]byte(minedValidSharesKey), nil)
+	valBytes, err := db.DB.Get([]byte(MinedValidSharesKey), nil)
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to read valid share counter from the db")
 	}
