@@ -46,13 +46,14 @@ func (c *Collector) Clear() {
 }
 
 // NewCollector creates a new Stats Collector
-func NewCollector(database *db.Database, engineWaitGroup *sync.WaitGroup) *Collector {
+func NewCollector(database *db.Database, engineWaitGroup *sync.WaitGroup, shareDifficulty uint64) *Collector {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	c := Collector{
 		Context:           ctx,
 		ContextCancelFunc: cancelFunc,
 		engineWaitGroup:   engineWaitGroup,
 		Database:          database,
+		ShareDifficulty:   shareDifficulty,
 	}
 	c.Init()
 	return &c
@@ -94,7 +95,7 @@ func (c *Collector) Run() {
 			for workerName, pendingStat := range c.PendingStats {
 				timestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs // Get rid of remainder
 				effectiveHashrate := float64(pendingStat.ValidShares) * float64(c.ShareDifficulty)
-				totalCollectedHashrate += effectiveHashrate
+				totalCollectedHashrate += effectiveHashrate / statCollectionPeriodSecs
 				stat := db.Stat{
 					WorkerName:        workerName,
 					ValidShareCount:   pendingStat.ValidShares,

@@ -39,7 +39,7 @@ func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64
 
 	waitGroup := new(sync.WaitGroup)
 
-	statsCollector := stats.NewCollector(database, waitGroup)
+	statsCollector := stats.NewCollector(database, waitGroup, shareDifficulty)
 
 	engine := MiningEngine{
 		Workmanager:                  gateway.NewWorkManager(workmanagerNotificationsBind, shareDifficulty, node, waitGroup),
