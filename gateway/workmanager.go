@@ -3,7 +3,7 @@ package gateway
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
+	"github.com/flexpool/solo/types"
 	"github.com/flexpool/solo/utils"
 	"github.com/pkg/errors"
 
@@ -72,11 +73,6 @@ type WorkManager struct {
 	engineWaitGroup   *sync.WaitGroup
 }
 
-// OpenEthereumWorkNotification represents the struct of OpenEthereum work notification
-type OpenEthereumWorkNotification struct {
-	Result []string `json:"result"`
-}
-
 // GetLastWork returns last work
 func (w *WorkManager) GetLastWork(applyShareDiff bool) []string {
 	work := w.lastWork
@@ -88,7 +84,7 @@ func (w *WorkManager) GetLastWork(applyShareDiff bool) []string {
 	return work
 }
 
-// NewWorkManager creates new WorkReceiver instance
+// NewWorkManager creates new WorkManager instance
 func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWaitGroup *sync.WaitGroup) *WorkManager {
 	shareTargetBigInt := big.NewInt(0).Div(big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0)), big.NewInt(0).SetUint64(shareDiff))
 	workManager := WorkManager{
@@ -107,38 +103,52 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			log.Logger.WithFields(logrus.Fields{
-				"prefix":   "workreceiver",
+				"prefix":   "workmanager",
 				"expected": "POST",
 				"got":      r.Method,
 			}).Error("Invalid HTTP method")
 			return
 		}
 		data, err := ioutil.ReadAll(r.Body)
-		var parsedJSONData OpenEthereumWorkNotification
-		err = json.Unmarshal(data, &parsedJSONData)
+
 		if err != nil {
 			log.Logger.WithFields(logrus.Fields{
-				"prefix": "workreceiver",
-				"error":  err,
-			}).Error("Unable to parse OpenEthereum work notification")
+				"prefix":    "workmanager",
+				"error":     err,
+				"node-type": types.NodeStringMap[workManager.Node.Type],
+			}).Error("Unable to read work notification")
 			return
 		}
 
-		if len(parsedJSONData.Result) != 4 {
+		var workNotification []string
+		var workNotificationParseError error
+
+		switch workManager.Node.Type {
+		case types.GethNode:
+			workNotification, workNotificationParseError = parseGethWorkNotification(data)
+		case types.OpenEthereumNode:
+			workNotification, workNotificationParseError = parseOpenEthereumWorkNotification(data)
+		default:
+			panic("unknown node type " + strconv.Itoa(types.OpenEthereumNode))
+		}
+
+		fmt.Println("work notification", workNotification)
+
+		if workNotificationParseError != nil {
 			log.Logger.WithFields(logrus.Fields{
-				"prefix":   "workreceiver",
-				"expected": 4,
-				"got":      len(parsedJSONData.Result),
-			}).Error("Invalid work notification length (Ensure that you're using OpenEthereum)")
+				"prefix":    "workmanager",
+				"error":     workNotificationParseError,
+				"node-type": types.NodeStringMap[workManager.Node.Type],
+			}).Error("Unable to parse work notification")
 			return
 		}
 
 		var channelIndexesToClean []int
 
-		workManager.lastWork = parsedJSONData.Result
+		workManager.lastWork = workNotification
 
 		workWithShareDifficulty := make([]string, 4)
-		copy(workWithShareDifficulty, parsedJSONData.Result)
+		copy(workWithShareDifficulty, workNotification)
 		workWithShareDifficulty[2] = workManager.shareTargetHex
 
 		// Sending work notification to all subscribers
@@ -158,7 +168,7 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 			workManager.subscriptions = workManager.subscriptions[:length-1]
 		}
 		workManager.subscriptionsMux.Unlock()
-		workManager.workHistory.Append(parsedJSONData.Result[0], parsedJSONData.Result)
+		workManager.workHistory.Append(workNotification[0], workNotification)
 
 		if workManager.workHistory.Len() > 8 {
 			// Removing unneeded (9th in history) work
@@ -166,9 +176,9 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 		}
 
 		log.Logger.WithFields(logrus.Fields{
-			"prefix":      "workreceiver",
-			"header-hash": parsedJSONData.Result[0][2:10],
-		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(parsedJSONData.Result[3]), 10))
+			"prefix":      "workmanager",
+			"header-hash": workNotification[0][2:10],
+		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(workNotification[3]), 10))
 	})
 
 	workManager.httpServer = &http.Server{
@@ -181,7 +191,7 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 	return &workManager
 }
 
-// Run function runs the WorkReceiver
+// Run function runs the WorkManager
 func (w *WorkManager) Run() {
 	w.engineWaitGroup.Add(1)
 	err := w.httpServer.ListenAndServe()
@@ -191,7 +201,7 @@ func (w *WorkManager) Run() {
 	}
 }
 
-// Stop function stops the WorkReceiver
+// Stop function stops the WorkManager
 func (w *WorkManager) Stop() {
 	w.shuttingDown = true
 	err := w.httpServer.Shutdown(context.Background())
