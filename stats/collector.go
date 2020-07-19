@@ -132,7 +132,7 @@ func (c *Collector) Run() {
 			log.Logger.WithFields(logrus.Fields{
 				"prefix":             "stats",
 				"effective-hashrate": humanize.SIWithDigits(totalCollectedHashrate, 2, "H/s"),
-			}).Info("Successfully collected data")
+			}).Info("Collected data")
 			totalCollectedHashrate = 0
 
 			c.Database.PruneStats(keepStatsForSecs)
