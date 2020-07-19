@@ -46,6 +46,7 @@ func (g *Gateway) submitBlock(submittedWork []string, blockNumber uint64, worker
 
 	acutalShareDifficulty, _ := big.NewFloat(0).SetInt(big.NewInt(0).Div(utils.BigMax256bit, actualTarget)).Float64()
 	log.Logger.WithFields(logrus.Fields{
+		"prefix":       "gateway",
 		"nonce":        submittedWork[0],
 		"block-number": blockNumber,
 		"worker":       workerName,
@@ -59,8 +60,34 @@ func (g *Gateway) submitBlock(submittedWork []string, blockNumber uint64, worker
 	}
 
 	if !status {
-		log.Logger.Error("Submitted block marked as invalid!")
+		log.Logger.WithFields(logrus.Fields{
+			"prefix":       "gateway",
+			"block-number": blockNumber,
+		}).Error("Submitted block marked as invalid!")
+		return
 	}
+
+	harvestedBlock, uncleParent, err := g.parentWorkManager.Node.HarvestBlockByNonce(submittedWork[0], blockNumber)
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{
+			"prefix":       "gateway",
+			"block-number": blockNumber,
+			"error":        err,
+		}).Error("Mined block wasn't found in blockchain!")
+		return
+	}
+
+	blockType := "block"
+	if uncleParent > 0 {
+		blockType = "uncle"
+	}
+
+	log.Logger.WithFields(logrus.Fields{
+		"prefix":       "gateway",
+		"block-number": blockNumber,
+		"type":         blockType,
+		"hash":         harvestedBlock.Hash,
+	}).Info("⚡️ Submitted block found in blockchain")
 }
 
 func (g *Gateway) validateShare(submittedWork []string, workerName string) (types.ShareType, error) {
@@ -92,12 +119,7 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 	shareIsValid, actualTarget := hasher.Verify(share)
 
 	if shareIsValid {
-		block := share
-		block.target = utils.HexStrToBigInt(fullWork[2])
-
-		blockValid, _ := hasher.Verify(block)
-
-		if blockValid {
+		if utils.HexStrToBigInt(fullWork[2]).Cmp(actualTarget) > 0 {
 			g.submitBlock(submittedWork, blockNumber, workerName, actualTarget)
 			// TODO add block to the DB
 			g.parentWorkManager.BestShareTarget = utils.BigMax256bit
