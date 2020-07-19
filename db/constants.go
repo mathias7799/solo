@@ -16,13 +16,16 @@
 
 package db
 
-// StatPrefix is used to identify if key is stat
+// StatPrefix is used to map stat db objects
 const StatPrefix = "stat__"
 
-// BestSharePrefix is used to identify if key is best share
+// TotalStatPrefix is used to map summarized stat db objects
+const TotalStatPrefix = "total__"
+
+// BestSharePrefix is used to map best share db objects
 const BestSharePrefix = "best__"
 
-// MinedBlockPrefix is used to identify if key is block
+// MinedBlockPrefix is used to map block db objects
 const MinedBlockPrefix = "block__"
 
 // MinedValidSharesKey is used to identify if key is mined valid shares counter

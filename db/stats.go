@@ -43,6 +43,14 @@ type Stat struct {
 	IPAddress         string  `msgpack:"ip_address"`
 }
 
+// TotalStat represents an interface for a summarized stat DB object
+type TotalStat struct {
+	ValidShareCount   uint64 `msgpack:"valid_share_count"`
+	StaleShareCount   uint64 `msgpack:"stale_share_count"`
+	InvalidShareCount uint64 `msgpack:"invalid_share_count"`
+	WorkerCount       uint64 `msgpack:"worker_count"`
+}
+
 // BestShare represents an interface for a best share DB object
 type BestShare struct {
 	WorkerName            string  `msgpack:"worker_name"`
@@ -67,6 +75,13 @@ type Block struct {
 func WriteStatToBatch(batch *leveldb.Batch, stat Stat, timestamp int64) {
 	data, _ := msgpack.Marshal(stat)
 	key := StatPrefix + stat.WorkerName + "_" + strconv.FormatInt(timestamp, 10)
+	batch.Put([]byte(key), data)
+}
+
+// WriteTotalStatToBatch writes worker stat object to the LevelDB batch
+func WriteTotalStatToBatch(batch *leveldb.Batch, stat TotalStat, timestamp int64) {
+	data, _ := msgpack.Marshal(stat)
+	key := TotalStatPrefix + "_" + strconv.FormatInt(timestamp, 10)
 	batch.Put([]byte(key), data)
 }
 

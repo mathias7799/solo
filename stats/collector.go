@@ -108,8 +108,10 @@ func (c *Collector) Run() {
 			c.Mux.Lock()
 
 			batch := new(leveldb.Batch)
+			pendingTotalStat := db.TotalStat{}
+			timestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs // Get rid of remainder
+
 			for workerName, pendingStat := range c.PendingStats {
-				timestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs // Get rid of remainder
 				effectiveHashrate := float64(pendingStat.ValidShares) * float64(c.ShareDifficulty)
 				totalCollectedHashrate += effectiveHashrate / statCollectionPeriodSecs
 				stat := db.Stat{
@@ -121,11 +123,19 @@ func (c *Collector) Run() {
 					EffectiveHashrate: effectiveHashrate,
 					IPAddress:         pendingStat.IPAddress,
 				}
+
+				pendingTotalStat.ValidShareCount += pendingStat.ValidShares
+				pendingTotalStat.StaleShareCount += pendingStat.StaleShares
+				pendingTotalStat.InvalidShareCount += pendingStat.InvalidShares
+				pendingTotalStat.WorkerCount++
+
 				db.WriteStatToBatch(batch, stat, timestamp)
 			}
-			c.Mux.Unlock()
 
+			c.Mux.Unlock()
 			c.Clear()
+
+			db.WriteTotalStatToBatch(batch, pendingTotalStat, timestamp)
 
 			c.Database.DB.Write(batch, nil)
 
