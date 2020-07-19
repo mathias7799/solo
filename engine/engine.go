@@ -26,7 +26,7 @@ type MiningEngine struct {
 }
 
 // NewMiningEngine creates a new Mining Engine
-func NewMiningEngine(workreceiverBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string) (*MiningEngine, error) {
+func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string) (*MiningEngine, error) {
 	node, err := nodeapi.NewNode(nodeHTTPRPC)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create Node")
@@ -42,8 +42,8 @@ func NewMiningEngine(workreceiverBind string, shareDifficulty uint64, insecureSt
 	statsCollector := stats.NewCollector(database, waitGroup)
 
 	engine := MiningEngine{
-		Workmanager:                  gateway.NewWorkManager(workreceiverBind, shareDifficulty, node, waitGroup),
-		workmanagerNotificationsBind: workreceiverBind,
+		Workmanager:                  gateway.NewWorkManager(workmanagerNotificationsBind, shareDifficulty, node, waitGroup),
+		workmanagerNotificationsBind: workmanagerNotificationsBind,
 		shareDifficulty:              shareDifficulty,
 		StatsCollector:               statsCollector,
 		Database:                     database,
