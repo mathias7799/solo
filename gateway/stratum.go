@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"math/big"
 	"net"
+	"time"
 
 	"github.com/flexpool/solo/jsonrpc"
 	"github.com/flexpool/solo/log"
@@ -43,6 +44,9 @@ func (g *Gateway) RunWorkSender(conn net.Conn) {
 // HandleConnection handles the gateway connection
 func (g *Gateway) HandleConnection(conn net.Conn) {
 	defer conn.Close()
+
+	// Add 5 sec timeout
+	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 
 	scanner := bufio.NewScanner(conn)
 
@@ -105,6 +109,9 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 			}))
 
 			authenticated = true
+
+			// Remove timeout
+			conn.SetReadDeadline(time.Time{})
 
 			// Starting work sender
 			go g.RunWorkSender(conn)
