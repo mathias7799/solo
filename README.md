@@ -11,7 +11,7 @@ There's a bunch of SOLO pools outside, and sadly none of them are transparent en
 
 ### Portability
 
-The Flexpool Solo is a highly portable program, so the only dependency you need is the Ethereum node. Also, it uses an embedded lightning-fast key-value database LevelDB, so there would be no need to set up an external database.
+The Flexpool Solo is a highly portable program, so the only dependency you need is the Ethereum node. Also, it uses an embedded lightning-fast key-value LevelDB database, so there is no need to set up an external databases.
 
 ### Speed
 
