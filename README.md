@@ -27,7 +27,6 @@ TBD
 - [x] Worker Authentication & Work Receiver
 - [x] Share verification
 - [x] Block submission
-- TBD
 
 ### Analytics
 - [x] Accept hashrate reports
