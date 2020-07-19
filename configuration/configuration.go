@@ -10,6 +10,7 @@ type Configuration struct {
 	ShareDifficulty                  uint64 `envconfig:"solo_share_difficulty" default:"4000000000"`
 	NodeHTTPRPC                      string `envconfig:"solo_node_http_rpc" default:"http://127.0.0.1:8545"`
 	DBPath                           string `envconfig:"solo_db_path" default:"./solo_db"`
+	LogLevel                         string `envconfig:"solo_log_level" default:"info"`
 }
 
 // GetConfig parses the environment variables

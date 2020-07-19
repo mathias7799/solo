@@ -42,6 +42,9 @@ func main() {
 		}).Fatal("Unable to get config")
 	}
 
+	// Set log level
+	log.SetLogLevel(config.LogLevel)
+
 	// Check the config
 	err = utils.IsInvalidAddress(config.WorkmanagerNotificationsBindAddr)
 	if err != nil {

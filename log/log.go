@@ -1,6 +1,8 @@
 package log
 
 import (
+	"strings"
+
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
@@ -15,4 +17,20 @@ func InitLog() {
 	formater.TimestampFormat = "2006-01-02 15:04:05"
 	formater.FullTimestamp = true
 	Logger.Formatter = formater
+}
+
+// SetLogLevel sets the log level
+func SetLogLevel(logLevelString string) {
+	switch strings.ToLower(logLevelString) {
+	case "debug":
+		Logger.SetLevel(logrus.DebugLevel)
+	case "info":
+		Logger.SetLevel(logrus.DebugLevel)
+	case "warning":
+		Logger.SetLevel(logrus.WarnLevel)
+	case "error":
+		Logger.SetLevel(logrus.ErrorLevel)
+	default:
+		Logger.Warn("Unknown log level \"" + logLevelString + "\". Falling back to INFO.")
+	}
 }
