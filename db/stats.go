@@ -23,7 +23,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flexpool/solo/log"
+
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/vmihailenco/msgpack/v5"
@@ -121,6 +124,13 @@ func (db *Database) GetValidSharesThenReset() (uint64, error) {
 	valBytes, err := db.DB.Get([]byte(MinedValidSharesKey), nil)
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to read valid share counter from the db")
+	}
+	db.DB.Delete([]byte(MinedValidSharesKey), nil)
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{
+			"prefix": "db",
+			"error":  err,
+		}).Error("Unable to delete mined valid shares counter")
 	}
 	return strconv.ParseUint(string(valBytes), 10, 64)
 }
