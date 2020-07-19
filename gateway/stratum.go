@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"math/big"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/flexpool/solo/jsonrpc"
@@ -54,7 +55,8 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 
 	var workerName string
 
-	ip := conn.RemoteAddr().String()
+	ipSplitted := strings.Split(conn.RemoteAddr().String(), ":")
+	ip := strings.Join(ipSplitted[:len(ipSplitted)-1], ":")
 
 	for scanner.Scan() {
 		request, err := jsonrpc.UnmarshalRequest(scanner.Bytes())
@@ -100,6 +102,11 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 				"worker-name": workerName,
 				"ip":          ip,
 			}).Info("Authenticated new worker")
+
+			g.statsCollector.Mux.Lock()
+			pendingStat := g.statsCollector.PendingStats[workerName]
+			pendingStat.IPAddress = ip
+			g.statsCollector.Mux.Unlock()
 
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
