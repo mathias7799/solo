@@ -16,7 +16,7 @@ Developed with ❤️ to make it as fast as Flexpool.
 ### Analytics
 - [x] Accept hashrate reports
 - [x] Collect worker statistics
-- [ ] Collect mined blocks and best shares
+- [x] Collect mined blocks and best shares
 - [ ] Implement querying
 - TBD
 
