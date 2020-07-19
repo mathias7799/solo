@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -131,8 +130,6 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 		default:
 			panic("unknown node type " + strconv.Itoa(types.OpenEthereumNode))
 		}
-
-		fmt.Println("work notification", workNotification)
 
 		if workNotificationParseError != nil {
 			log.Logger.WithFields(logrus.Fields{
