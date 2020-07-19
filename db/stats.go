@@ -1,6 +1,8 @@
 package db
 
 import (
+	"fmt"
+	"math/big"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -13,6 +15,7 @@ import (
 
 const statPrefix = "stat__"
 const bestSharePrefix = "best__"
+const minedBlockPrefix = "block__"
 
 // Stat represents an interface for a stat DB object
 type Stat struct {
@@ -29,6 +32,24 @@ type Stat struct {
 type BestShare struct {
 	WorkerName            string
 	ActualShareDifficulty float64
+}
+
+// Block represents an interface for a block DB object
+type Block struct {
+	Hash                  string
+	Number                uint64
+	Type                  string
+	Worker                string
+	Difficulty            string
+	Timestamp             string
+	Confirmed             bool
+	MinedHashes           float64
+	RoundTime             int64
+	Luck                  uint64
+	BlockReward           *big.Int
+	BlockFees             *big.Int
+	UncleInclusionRewards *big.Int
+	TotalRewards          *big.Int
 }
 
 // WriteStatToBatch writes worker stat object to the LevelDB batch
@@ -63,4 +84,17 @@ func (db *Database) PruneStats(deleteDataOlderThanSecs int64) {
 			db.DB.Delete(key, nil)
 		}
 	}
+}
+
+// WriteMinedBlock writes mined block to the database
+func (db *Database) WriteMinedBlock(block Block) error {
+	data, err := msgpack.Marshal(block)
+	if err != nil {
+		fmt.Println("DEBUG Print on WriteMinedBlock (don't forget to remove panic)")
+		panic(err)
+	}
+
+	key := bestSharePrefix + minedBlockPrefix + block.Hash
+
+	return db.DB.Put([]byte(key), data, nil)
 }
