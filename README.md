@@ -29,6 +29,9 @@ Developed with ❤️ to make it as fast as Flexpool.
 ### Documentation
 TBD
 
+### Other
+- [ ] Write tests for everything
+
 # License
 
 GNU Affero General Public License v3.0
