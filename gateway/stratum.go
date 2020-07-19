@@ -119,12 +119,6 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 				"ip":          ip,
 			}).Info("Authenticated new worker")
 
-			g.statsCollector.Mux.Lock()
-			pendingStat := g.statsCollector.PendingStats[workerName]
-			pendingStat.IPAddress = ip
-			g.statsCollector.PendingStats[workerName] = pendingStat
-			g.statsCollector.Mux.Unlock()
-
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
 				JSONRPCVersion: jsonrpc.Version,
 				ID:             request.ID,
@@ -136,6 +130,11 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 
 			// Remove timeout
 			conn.SetReadDeadline(time.Time{})
+
+			g.statsCollector.Mux.Lock()
+			pendingStat := g.statsCollector.PendingStats[workerName]
+			pendingStat.IPAddress = ip
+			g.statsCollector.Mux.Unlock()
 
 			// Starting work sender
 			go g.RunWorkSender(conn)
@@ -179,6 +178,7 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 
 				g.statsCollector.Mux.Lock()
 				pendingStat := g.statsCollector.PendingStats[workerName]
+				pendingStat.IPAddress = ip
 
 				switch shareType {
 				case types.ShareValid:
