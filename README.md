@@ -3,7 +3,23 @@ A lightweight portable self-hosted SOLO Ethereum Mining Pool.
 
 Developed with ❤️ to make it as fast as Flexpool.
 
-> WARNING: This project is currently under development
+> WARNING: This project is currently under heavy development
+
+# Why Flexpool Solo?
+
+There's a bunch of SOLO pools outside, and sadly none of them are transparent enough to have any trust. Also, there were incidents when SOLO pools have just stolen blocks. At Flexpool, we decided to develop a self-hosted open-source solution to all this mess.
+
+### Portability
+
+The Flexpool Solo is a highly portable program, so the only dependency you need is the Ethereum node. Also, it uses an embedded lightning-fast key-value database LevelDB, so there would be no need to set up an external database.
+
+### Speed
+
+The Flexpool Solo is written in the Go Programming Language, which makes it very speedy and more profitable.
+
+# Installation
+
+TBD
 
 # TODO
 
