@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"math/big"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -36,20 +35,15 @@ type BestShare struct {
 
 // Block represents an interface for a block DB object
 type Block struct {
-	Hash                  string
-	Number                uint64
-	Type                  string
-	Worker                string
-	Difficulty            string
-	Timestamp             string
-	Confirmed             bool
-	MinedHashes           float64
-	RoundTime             int64
-	Luck                  uint64
-	BlockReward           *big.Int
-	BlockFees             *big.Int
-	UncleInclusionRewards *big.Int
-	TotalRewards          *big.Int
+	Hash        string
+	Number      uint64
+	Type        string
+	WorkerName  string
+	Timestamp   int64
+	Confirmed   bool
+	MinedHashes float64
+	RoundTime   int64
+	Luck        uint64
 }
 
 // WriteStatToBatch writes worker stat object to the LevelDB batch
