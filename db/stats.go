@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/vmihailenco/msgpack/v5"
@@ -16,34 +17,37 @@ const statPrefix = "stat__"
 const bestSharePrefix = "best__"
 const minedBlockPrefix = "block__"
 
+const minedValidSharesKey = "mined_valid_shares"
+
 // Stat represents an interface for a stat DB object
 type Stat struct {
-	WorkerName        string
-	ValidShareCount   uint64
-	StaleShareCount   uint64
-	InvalidShareCount uint64
-	ReportedHashrate  float64
-	EffectiveHashrate float64
-	IPAddress         string
+	WorkerName        string  `msgpack:"worker_name"`
+	ValidShareCount   uint64  `msgpack:"valid_share_count"`
+	StaleShareCount   uint64  `msgpack:"stale_share_count"`
+	InvalidShareCount uint64  `msgpack:"invalid_share_count"`
+	ReportedHashrate  float64 `msgpack:"reported_hashrate"`
+	EffectiveHashrate float64 `msgpack:"effective_hashrate"`
+	IPAddress         string  `msgpack:"ip_address"`
 }
 
 // BestShare represents an interface for a best share DB object
 type BestShare struct {
-	WorkerName            string
-	ActualShareDifficulty float64
+	WorkerName            string  `msgpack:"worker_name"`
+	ActualShareDifficulty float64 `msgpack:"actual_share_difficulty"`
 }
 
 // Block represents an interface for a block DB object
 type Block struct {
-	Hash        string
-	Number      uint64
-	Type        string
-	WorkerName  string
-	Timestamp   int64
-	Confirmed   bool
-	MinedHashes float64
-	RoundTime   int64
-	Luck        uint64
+	Hash        string  `msgpack:"hash"`
+	Number      uint64  `msgpack:"number"`
+	Type        string  `msgpack:"type"`
+	WorkerName  string  `msgpack:"worker_name"`
+	Difficulty  float64 `msgpack:"difficulty"`
+	Timestamp   int64   `msgpack:"timestamp"`
+	Confirmed   bool    `msgpack:"confirmed"`
+	MinedHashes float64 `msgpack:"mined_hashes"`
+	RoundTime   int64   `msgpack:"round_time"`
+	Luck        float64 `msgpack:"luck"`
 }
 
 // WriteStatToBatch writes worker stat object to the LevelDB batch
@@ -88,7 +92,28 @@ func (db *Database) WriteMinedBlock(block Block) error {
 		panic(err)
 	}
 
-	key := bestSharePrefix + minedBlockPrefix + block.Hash
+	key := minedBlockPrefix + block.Hash
 
 	return db.DB.Put([]byte(key), data, nil)
+}
+
+// IncrValidShares increments mined valid shares counter (used to precisely calculate luck)
+func (db *Database) IncrValidShares() error {
+	prevValBytes, _ := db.DB.Get([]byte(minedValidSharesKey), nil)
+	prevVal, _ := strconv.ParseUint(string(prevValBytes), 10, 64)
+	return db.DB.Put([]byte(minedValidSharesKey), []byte(string(strconv.FormatUint(prevVal+1, 10))), nil)
+}
+
+// GetValidSharesThenReset gets the mined valid shares counter and resets it
+func (db *Database) GetValidSharesThenReset() (uint64, error) {
+	valBytes, err := db.DB.Get([]byte(minedValidSharesKey), nil)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to read valid share counter from the db")
+	}
+	return strconv.ParseUint(string(valBytes), 10, 64)
+}
+
+// GetRoundTime returns round time
+func (db *Database) GetRoundTime() (int64, error) {
+	return 0, errors.New("unimplemented") // Needed to implement querying first
 }

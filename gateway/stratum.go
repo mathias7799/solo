@@ -167,6 +167,9 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 				switch shareType {
 				case types.ShareValid:
 					pendingStat.ValidShares++
+					if g.statsCollector.Database.IncrValidShares() != nil {
+						log.Logger.Error("Unable to increment valid shares counter")
+					}
 				case types.ShareStale:
 					pendingStat.StaleShares++
 				case types.ShareInvalid:

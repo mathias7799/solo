@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/flexpool/ethash-go"
+	"github.com/flexpool/solo/db"
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/types"
 	"github.com/flexpool/solo/utils"
@@ -88,6 +89,39 @@ func (g *Gateway) submitBlock(submittedWork []string, blockNumber uint64, worker
 		"type":         blockType,
 		"hash":         harvestedBlock.Hash,
 	}).Info("⚡️ Submitted block found in blockchain")
+
+	sharesMined, err := g.statsCollector.Database.GetValidSharesThenReset()
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{
+			"prefix": "gateway",
+			"error":  err.Error(),
+		}).Warn("Unable to get valid share counter")
+	}
+
+	roundTime, err := g.statsCollector.Database.GetRoundTime()
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{
+			"prefix": "gateway",
+			"error":  err.Error(),
+		}).Error("Unable to round time")
+	}
+
+	difficulty := float64(utils.MustSoftHexToUint64(harvestedBlock.Difficulty))
+	hashesMined := float64(sharesMined) * float64(g.parentWorkManager.shareDiff)
+
+	// Writing found block to DB
+	g.statsCollector.Database.WriteMinedBlock(db.Block{
+		Hash:        harvestedBlock.Hash,
+		Number:      utils.MustSoftHexToUint64(harvestedBlock.Number),
+		Type:        blockType,
+		WorkerName:  workerName,
+		Difficulty:  difficulty,
+		Timestamp:   int64(utils.MustSoftHexToUint64(harvestedBlock.Timestamp)),
+		Confirmed:   false,
+		MinedHashes: hashesMined,
+		RoundTime:   roundTime,
+		Luck:        difficulty / hashesMined,
+	})
 }
 
 func (g *Gateway) validateShare(submittedWork []string, workerName string) (types.ShareType, error) {
