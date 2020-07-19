@@ -29,10 +29,19 @@ type Collector struct {
 	engineWaitGroup   *sync.WaitGroup
 }
 
-// ResetValues deletes (reinitializes) all values from Stats Collector
-func (c *Collector) ResetValues() {
+// Init initializes the Collector
+func (c *Collector) Init() {
 	c.Mux.Lock()
 	c.PendingStats = make(map[string]PendingStat)
+	c.Mux.Unlock()
+}
+
+// Clear deletes all keys (and values) from the c.PendingStats
+func (c *Collector) Clear() {
+	c.Mux.Lock()
+	for k := range c.PendingStats {
+		delete(c.PendingStats, k)
+	}
 	c.Mux.Unlock()
 }
 
@@ -45,7 +54,7 @@ func NewCollector(database *db.Database, engineWaitGroup *sync.WaitGroup) *Colle
 		engineWaitGroup:   engineWaitGroup,
 		Database:          database,
 	}
-	c.ResetValues()
+	c.Init()
 	return &c
 }
 
@@ -54,8 +63,6 @@ func (c *Collector) Run() {
 	// Wait group
 	c.engineWaitGroup.Add(1)
 	defer c.engineWaitGroup.Done()
-
-	// TODO: Collect outdated stats (garbege collection)
 
 	prevCollectionTimestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs
 
@@ -100,6 +107,8 @@ func (c *Collector) Run() {
 				db.WriteStatToBatch(batch, stat, timestamp)
 			}
 			c.Mux.Unlock()
+
+			c.Clear()
 
 			c.Database.DB.Write(batch, nil)
 
