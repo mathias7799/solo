@@ -71,6 +71,18 @@ func (n *Node) GetBlockByNumber(blockNumber uint64) (Block, error) {
 	return block, err
 }
 
+// GetBlockByHash delegates to `eth_getBlockByHash` RPC method, and returns block by number
+func (n *Node) GetBlockByHash(blockHash string) (Block, error) {
+	data, err := n.makeHTTPRPCRequest("eth_getBlockByHash", []interface{}{blockHash, false})
+	if err != nil {
+		return Block{}, err
+	}
+
+	var block Block
+	err = mapstructure.Decode(data, &block)
+	return block, err
+}
+
 // GetUncleByBlockNumberAndIndex delegates to `eth_getUncleByBlockNumberAndIndex` RPC method, and returns uncle by block number and index
 func (n *Node) GetUncleByBlockNumberAndIndex(blockNumber uint64, uncleIndex int) (Block, error) {
 	data, err := n.makeHTTPRPCRequest("eth_getUncleByBlockNumberAndIndex", []interface{}{fmt.Sprintf("0x%x", blockNumber), fmt.Sprintf("0x%x", uncleIndex)})
