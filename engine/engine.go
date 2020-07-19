@@ -34,7 +34,7 @@ func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64
 
 	database, err := db.OpenDB(databasePath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to open db")
 	}
 
 	waitGroup := new(sync.WaitGroup)
