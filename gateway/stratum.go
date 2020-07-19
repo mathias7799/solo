@@ -106,6 +106,7 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 			g.statsCollector.Mux.Lock()
 			pendingStat := g.statsCollector.PendingStats[workerName]
 			pendingStat.IPAddress = ip
+			g.statsCollector.PendingStats[workerName] = pendingStat
 			g.statsCollector.Mux.Unlock()
 
 			write(conn, jsonrpc.MarshalResponse(jsonrpc.Response{
