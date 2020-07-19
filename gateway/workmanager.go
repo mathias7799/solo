@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/dustin/go-humanize"
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
 	"github.com/flexpool/solo/types"
@@ -172,9 +173,13 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 			workManager.workHistory.Shift()
 		}
 
+		workTarget, _ := big.NewInt(0).SetString(utils.Clear0x(workNotification[2]), 16)
+		workDifficulty, _ := big.NewFloat(0).SetInt(big.NewInt(0).Div(utils.BigMax256bit, workTarget)).Float64()
+
 		log.Logger.WithFields(logrus.Fields{
 			"prefix":      "workmanager",
 			"header-hash": workNotification[0][2:10],
+			"block-diff":  humanize.SIWithDigits(workDifficulty, 2, "H"),
 		}).Info("New job for #" + strconv.FormatUint(utils.MustSoftHexToUint64(workNotification[3]), 10))
 	})
 
