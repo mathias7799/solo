@@ -78,7 +78,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	miningEngine, err := engine.NewMiningEngine(config.WorkmanagerNotificationsBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword, config.NodeHTTPRPC, config.DBPath)
+	miningEngine, err := engine.NewMiningEngine(config.WorkmanagerNotificationsBindAddr, config.ShareDifficulty, config.GatewayInsecureBindAddr, "", config.GatewayPassword, config.NodeHTTPRPC, config.DBPath, config.BlockConfirmationsRequired)
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{
 			"prefix": "engine",

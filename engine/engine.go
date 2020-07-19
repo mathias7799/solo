@@ -32,17 +32,20 @@ import (
 
 // MiningEngine represents the Flexpool Solo mining engine
 type MiningEngine struct {
-	Workmanager                  *gateway.WorkManager
 	workmanagerNotificationsBind string
 	shareDifficulty              uint64
-	Gateways                     []*gateway.Gateway
-	StatsCollector               *stats.Collector
-	Database                     *db.Database
-	waitGroup                    *sync.WaitGroup
+
+	Workmanager              *gateway.WorkManager
+	Gateways                 []*gateway.Gateway
+	StatsCollector           *stats.Collector
+	Database                 *db.Database
+	BlockConfirmationManager *stats.BlockConfirmationManager
+
+	waitGroup *sync.WaitGroup
 }
 
 // NewMiningEngine creates a new Mining Engine
-func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string) (*MiningEngine, error) {
+func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string, blockConfirmationsRequired uint64) (*MiningEngine, error) {
 	node, err := nodeapi.NewNode(nodeHTTPRPC)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create Node")
@@ -56,12 +59,14 @@ func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64
 	waitGroup := new(sync.WaitGroup)
 
 	statsCollector := stats.NewCollector(database, waitGroup, shareDifficulty)
+	blockConfirmationManager := stats.NewBlockConfirmationManager(database, waitGroup, node, blockConfirmationsRequired)
 
 	engine := MiningEngine{
 		Workmanager:                  gateway.NewWorkManager(workmanagerNotificationsBind, shareDifficulty, node, waitGroup),
 		workmanagerNotificationsBind: workmanagerNotificationsBind,
 		shareDifficulty:              shareDifficulty,
 		StatsCollector:               statsCollector,
+		BlockConfirmationManager:     blockConfirmationManager,
 		Database:                     database,
 		waitGroup:                    waitGroup,
 	}
@@ -97,6 +102,8 @@ func (e *MiningEngine) Start() {
 		go g.Run()
 	}
 
+	go e.BlockConfirmationManager.Run()
+
 	log.Logger.WithFields(logrus.Fields{
 		"prefix":     "engine",
 		"share-diff": humanize.SIWithDigits(float64(e.shareDifficulty), 2, "H"),
@@ -110,6 +117,7 @@ func (e *MiningEngine) Stop() {
 	}
 	e.Workmanager.Stop()
 	e.StatsCollector.Stop()
+	e.BlockConfirmationManager.Stop()
 
 	e.waitGroup.Wait()
 	e.Database.DB.Close()
