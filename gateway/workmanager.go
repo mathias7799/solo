@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -138,6 +139,15 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 				"error":     workNotificationParseError,
 				"node-type": types.NodeStringMap[workManager.Node.Type],
 			}).Error("Unable to parse work notification")
+			return
+		}
+
+		if len(workNotification) != 4 {
+			log.Logger.WithFields(logrus.Fields{
+				"prefix":    "workmanager",
+				"error":     workNotificationParseError,
+				"node-type": types.NodeStringMap[workManager.Node.Type],
+			}).Error("Invalid work notification (" + fmt.Sprintf("%v", workNotification) + ")")
 			return
 		}
 
