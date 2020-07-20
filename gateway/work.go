@@ -19,6 +19,7 @@ package gateway
 import (
 	"errors"
 	"math/big"
+	"time"
 
 	"github.com/flexpool/ethash-go"
 	"github.com/flexpool/solo/db"
@@ -170,8 +171,7 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 
 	if shareIsValid {
 		if utils.HexStrToBigInt(fullWork[2]).Cmp(actualTarget) > 0 {
-			g.submitBlock(submittedWork, blockNumber, workerName, actualTarget)
-			// TODO add block to the DB
+			go g.submitBlock(submittedWork, blockNumber, workerName, actualTarget)
 			g.parentWorkManager.BestShareTarget = utils.BigMax256bit
 		} else {
 			if g.parentWorkManager.BestShareTarget.Cmp(actualTarget) == 1 {
@@ -180,8 +180,13 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 					"prefix":      "gateway",
 					"actual-diff": humanize.SIWithDigits(float64ActualDifficulty, 2, "H"),
 				}).Info("New best share")
+				err := g.statsCollector.Database.WriteBestShare(db.BestShare{WorkerName: workerName, ActualShareDifficulty: float64ActualDifficulty}, time.Now().Unix())
+				if err != nil {
+					log.Logger.WithFields(logrus.Fields{
+						"prefix": "gateway",
+					}).Error("Unable to write best share to DB")
+				}
 				g.parentWorkManager.BestShareTarget = actualTarget
-				// TODO add best share to db
 			}
 		}
 

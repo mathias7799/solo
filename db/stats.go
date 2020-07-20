@@ -18,7 +18,6 @@ package db
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -86,13 +85,6 @@ func WriteTotalStatToBatch(batch *leveldb.Batch, stat TotalStat, timestamp int64
 	batch.Put([]byte(key), data)
 }
 
-// WriteBestShareToBatch writes best share object to the LevelDB batch
-func WriteBestShareToBatch(batch *leveldb.Batch, bestShare BestShare, timestamp int64) {
-	data, _ := msgpack.Marshal(bestShare)
-	key := BestSharePrefix + bestShare.WorkerName + "_" + strconv.FormatInt(timestamp, 10) + "_" + strconv.FormatUint(rand.Uint64(), 16)
-	batch.Put([]byte(key), data)
-}
-
 // PruneStats removes data older than
 func (db *Database) PruneStats(deleteDataOlderThanSecs int64) {
 	iter := db.DB.NewIterator(util.BytesPrefix([]byte(StatPrefix)), nil)
@@ -117,14 +109,15 @@ func (db *Database) PruneStats(deleteDataOlderThanSecs int64) {
 
 // WriteMinedBlock writes mined block to the database
 func (db *Database) WriteMinedBlock(block Block) error {
-	data, err := msgpack.Marshal(block)
-	if err != nil {
-		fmt.Println("DEBUG Print on WriteMinedBlock (don't forget to remove panic)")
-		panic(err)
-	}
-
+	data, _ := msgpack.Marshal(block)
 	key := MinedBlockPrefix + block.Hash
+	return db.DB.Put([]byte(key), data, nil)
+}
 
+// WriteBestShare writes best share  to the database
+func (db *Database) WriteBestShare(bestShare BestShare, timestamp int64) error {
+	data, _ := msgpack.Marshal(bestShare)
+	key := BestSharePrefix + bestShare.WorkerName + "_" + strconv.FormatInt(timestamp, 10) + "_" + strconv.FormatUint(rand.Uint64(), 16)
 	return db.DB.Put([]byte(key), data, nil)
 }
 
