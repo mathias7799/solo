@@ -29,9 +29,9 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
+	"github.com/flexpool/solo/process"
 	"github.com/flexpool/solo/types"
 	"github.com/flexpool/solo/utils"
-	"github.com/pkg/errors"
 
 	"github.com/sirupsen/logrus"
 )
@@ -231,8 +231,13 @@ func (w *WorkManager) Run() {
 	err := w.httpServer.ListenAndServe()
 
 	if !w.shuttingDown {
-		panic(errors.Wrap(err, "Server shut down unexpectedly"))
+		log.Logger.WithFields(logrus.Fields{
+			"prefix": "workmanager",
+			"error":  err.Error(),
+		}).Error("Server shut down unexpectedly")
+		process.SafeExit(1)
 	}
+	w.engineWaitGroup.Done()
 }
 
 // Stop function stops the WorkManager
