@@ -1,4 +1,8 @@
 # Mac
 .DS_Store
 
+# Temporary files
 tmp*
+
+# Web App
+node_modules
