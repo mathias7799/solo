@@ -58,11 +58,11 @@ func NewBlockConfirmationManager(database *db.Database, engineWaitGroup *sync.Wa
 // Run function runs the BlockConfirmationManager
 func (b *BlockConfirmationManager) Run() {
 	b.engineWaitGroup.Add(1)
+	defer b.engineWaitGroup.Done()
 
 	for {
 		select {
 		case <-b.Context.Done():
-			b.engineWaitGroup.Done()
 			return
 		default:
 

@@ -242,7 +242,6 @@ func (w *WorkManager) Stop() {
 	if err != nil {
 		panic(err)
 	}
-	w.engineWaitGroup.Done()
 }
 
 // SubscribeNotifications subscribes the given channel to the work receiver
