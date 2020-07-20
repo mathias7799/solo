@@ -180,7 +180,11 @@ func (g *Gateway) validateShare(submittedWork []string, workerName string) (type
 					"prefix":      "gateway",
 					"actual-diff": humanize.SIWithDigits(float64ActualDifficulty, 2, "H"),
 				}).Info("New best share")
-				err := g.statsCollector.Database.WriteBestShare(db.BestShare{WorkerName: workerName, ActualShareDifficulty: float64ActualDifficulty}, time.Now().Unix())
+				err := g.statsCollector.Database.WriteBestShare(db.BestShare{
+					WorkerName:            workerName,
+					ActualShareDifficulty: float64ActualDifficulty,
+					Timestamp:             time.Now().Unix(),
+				}, time.Now().Unix())
 				if err != nil {
 					log.Logger.WithFields(logrus.Fields{
 						"prefix": "gateway",

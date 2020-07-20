@@ -55,6 +55,7 @@ type TotalStat struct {
 type BestShare struct {
 	WorkerName            string  `msgpack:"worker_name"`
 	ActualShareDifficulty float64 `msgpack:"actual_share_difficulty"`
+	Timestamp             int64   `msgpack:"timestamp"`
 }
 
 // Block represents an interface for a block DB object
