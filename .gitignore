@@ -6,3 +6,4 @@ tmp*
 
 # Web App
 node_modules
+dist
