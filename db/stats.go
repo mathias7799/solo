@@ -17,6 +17,7 @@
 package db
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -153,4 +154,31 @@ func (db *Database) GetValidSharesThenReset() (uint64, error) {
 // GetRoundTime returns round time
 func (db *Database) GetRoundTime() (int64, error) {
 	return 0, errors.New("unimplemented") // Needed to implement querying first
+}
+
+// GetBlocksUnsorted returns the unsorted blocks from the Database
+func (db *Database) GetBlocksUnsorted() []Block {
+	var blocks []Block
+	iter := db.DB.NewIterator(util.BytesPrefix([]byte(MinedBlockPrefix)), nil)
+	for iter.Next() {
+		blockHash := strings.Replace(string(iter.Key()), MinedBlockPrefix, "", 1)
+		if hashBytes, err := hex.DecodeString(blockHash[2:]); err != nil || len(hashBytes) > 32 {
+			panic("Database is corrupted")
+		}
+
+		var parsedBlock Block
+
+		if err := msgpack.Unmarshal(iter.Value(), &parsedBlock); err != nil {
+			panic(errors.Wrap(err, "Database is corrupted"))
+		}
+
+		if parsedBlock.Hash != blockHash {
+			panic("Database is corruped (Blockhash Key: \"" + blockHash + "\", Actual: \"" + parsedBlock.Hash + "\")")
+		}
+
+		blocks = append(blocks, parsedBlock)
+	}
+
+	iter.Release()
+	return blocks
 }
