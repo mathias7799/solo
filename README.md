@@ -36,6 +36,7 @@ TBD
 - TBD
 
 ### Front End
+- [ ] Base Website
 - [ ] General & Per worker Statistics
 - [ ] Network statistics
 - [ ] Node Health monitoring 
