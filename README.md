@@ -1,11 +1,11 @@
-# Flexpool Solo (WIP)
+# Flexpool SOLO (WIP)
 A lightweight portable self-hosted SOLO Ethereum Mining Pool.
 
 Developed with ❤️ to make it as fast as Flexpool.
 
 > WARNING: This project is currently under heavy development
 
-# Why Flexpool Solo?
+# Why?
 
 There's a bunch of SOLO pools outside, and sadly none of them are transparent enough to have any trust. Also, there were incidents when SOLO pools have just stolen blocks. At Flexpool, we decided to develop a self-hosted open-source solution to all this mess.
 
@@ -15,7 +15,7 @@ The Flexpool Solo is a highly portable software, and the only dependency you nee
 
 ### Speed
 
-The Flexpool Solo is written in the Go Programming Language, which makes it very speedy and more profitable.
+The Flexpool SOLO is written in the Go Programming Language, which makes it very speedy and more profitable.
 
 # Installation
 
@@ -32,7 +32,7 @@ TBD
 - [x] Accept hashrate reports
 - [x] Collect worker statistics
 - [x] Collect mined blocks and best shares
-- [ ] Implement querying
+- [ ] Implement querying & API
 - TBD
 
 ### Front End
