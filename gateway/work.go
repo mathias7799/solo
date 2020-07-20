@@ -115,14 +115,7 @@ func (g *Gateway) submitBlock(submittedWork []string, blockNumber uint64, worker
 		}).Warn("Unable to get valid share counter")
 	}
 
-	roundTime, err := g.statsCollector.Database.GetRoundTime()
-	if err != nil {
-		log.Logger.WithFields(logrus.Fields{
-			"prefix": "gateway",
-			"error":  err.Error(),
-		}).Error("Unable to round time")
-	}
-
+	roundTime := g.statsCollector.Database.GetRoundTime()
 	difficulty := float64(utils.MustSoftHexToUint64(harvestedBlock.Difficulty))
 	hashesMined := float64(sharesMined) * float64(g.parentWorkManager.shareDiff)
 

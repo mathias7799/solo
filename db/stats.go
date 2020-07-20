@@ -18,6 +18,7 @@ package db
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -146,8 +147,31 @@ func (db *Database) GetValidSharesThenReset() (uint64, error) {
 }
 
 // GetRoundTime returns round time
-func (db *Database) GetRoundTime() (int64, error) {
-	return 0, errors.New("unimplemented") // Needed to implement querying first
+func (db *Database) GetRoundTime() int64 {
+	blocks := db.GetBlocksUnsorted()
+
+	if len(blocks) > 0 {
+		var latestBlockTimestamp int64 = time.Now().Unix()
+		for _, block := range blocks {
+			if latestBlockTimestamp > block.Timestamp {
+				latestBlockTimestamp = block.Timestamp
+			}
+		}
+		return time.Now().Unix() - latestBlockTimestamp
+	}
+
+	// Search for first best share
+	bestShares := db.GetUnsortedBestShares()
+
+	var earliestBestShareTimestamp int64 = time.Now().Unix()
+
+	for _, bestShare := range bestShares {
+		if earliestBestShareTimestamp > bestShare.Timestamp {
+			earliestBestShareTimestamp = bestShare.Timestamp
+		}
+	}
+
+	return time.Now().Unix() - earliestBestShareTimestamp
 }
 
 // GetBlocksUnsorted returns the unsorted blocks from the Database
@@ -175,4 +199,32 @@ func (db *Database) GetBlocksUnsorted() []Block {
 
 	iter.Release()
 	return blocks
+}
+
+// GetUnsortedBestShares returns the unsorted best shares from the Database
+func (db *Database) GetUnsortedBestShares() []BestShare {
+	var bestShares []BestShare
+	iter := db.DB.NewIterator(util.BytesPrefix([]byte(BestSharePrefix)), nil)
+	for iter.Next() {
+		timestampString := strings.Split(strings.Split(strings.Replace(string(iter.Key()), BestSharePrefix, "", 1), "__")[0], "_")[1]
+		timestamp, err := strconv.ParseInt(timestampString, 10, 64)
+		if err != nil {
+			panic(errors.Wrap(err, "Database is corrupted"))
+		}
+
+		var parsedBestShare BestShare
+
+		if err := msgpack.Unmarshal(iter.Value(), &parsedBestShare); err != nil {
+			panic(errors.Wrap(err, "Database is corrupted"))
+		}
+
+		if timestamp != parsedBestShare.Timestamp {
+			panic(fmt.Sprintf("Database is corrupted (Timestamp key: %v, Actual: %v)", timestamp, parsedBestShare.Timestamp))
+		}
+
+		bestShares = append(bestShares, parsedBestShare)
+
+	}
+	iter.Release()
+	return bestShares
 }
