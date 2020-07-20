@@ -28,6 +28,7 @@ type Configuration struct {
 	DBPath                           string `envconfig:"solo_db_path" default:"./solo_db"`
 	LogLevel                         string `envconfig:"solo_log_level" default:"info"`
 	BlockConfirmationsRequired       uint64 `envconfig:"solo_block_confirmations_required" default:"60"`
+	WebServerBind                    string `envconfig:"solo_webserver_bind" default:"127.0.0.1:8085"`
 }
 
 // GetConfig parses the environment variables

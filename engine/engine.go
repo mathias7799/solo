@@ -25,6 +25,7 @@ import (
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
 	"github.com/flexpool/solo/stats"
+	"github.com/flexpool/solo/web"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -33,6 +34,7 @@ import (
 // MiningEngine represents the Flexpool Solo mining engine
 type MiningEngine struct {
 	workmanagerNotificationsBind string
+	webServerBind                string
 	shareDifficulty              uint64
 
 	Workmanager              *gateway.WorkManager
@@ -41,11 +43,13 @@ type MiningEngine struct {
 	Database                 *db.Database
 	BlockConfirmationManager *stats.BlockConfirmationManager
 
+	WebServer *web.Server
+
 	waitGroup *sync.WaitGroup
 }
 
 // NewMiningEngine creates a new Mining Engine
-func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string, blockConfirmationsRequired uint64) (*MiningEngine, error) {
+func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string, blockConfirmationsRequired uint64, webServerBind string) (*MiningEngine, error) {
 	node, err := nodeapi.NewNode(nodeHTTPRPC)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create Node")
@@ -61,6 +65,8 @@ func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64
 	statsCollector := stats.NewCollector(database, waitGroup, shareDifficulty)
 	blockConfirmationManager := stats.NewBlockConfirmationManager(database, waitGroup, node, blockConfirmationsRequired)
 
+	webServer := web.NewServer(database, node, waitGroup, webServerBind)
+
 	engine := MiningEngine{
 		Workmanager:                  gateway.NewWorkManager(workmanagerNotificationsBind, shareDifficulty, node, waitGroup),
 		workmanagerNotificationsBind: workmanagerNotificationsBind,
@@ -69,6 +75,8 @@ func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64
 		BlockConfirmationManager:     blockConfirmationManager,
 		Database:                     database,
 		waitGroup:                    waitGroup,
+		WebServer:                    webServer,
+		webServerBind:                webServerBind,
 	}
 
 	if insecureStratumBind != "" {
@@ -103,6 +111,12 @@ func (e *MiningEngine) Start() {
 	}
 
 	go e.BlockConfirmationManager.Run()
+
+	go e.WebServer.Run()
+	log.Logger.WithFields(logrus.Fields{
+		"prefix": "engine",
+		"bind":   e.webServerBind,
+	}).Info("Started Web Server")
 
 	log.Logger.WithFields(logrus.Fields{
 		"prefix":     "engine",
