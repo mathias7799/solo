@@ -15,7 +15,7 @@ The Flexpool Solo is a highly portable software, and the only dependency you nee
 
 ### Speed
 
-The Flexpool SOLO is written in the Go Programming Language, which makes it very speedy and more profitable.
+The Flexpool SOLO is written in the Go Programming Language, which makes it very speedy and more profitable accordingly.
 
 # Installation
 
