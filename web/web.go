@@ -65,6 +65,7 @@ func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGr
 	}
 
 	mux.HandleFunc("/api/currentBlock", func(w http.ResponseWriter, r *http.Request) {
+
 		currentBlock, err := server.node.BlockNumber()
 		w.Write(MarshalAPIResponse(APIResponse{
 			Result: currentBlock,
@@ -83,7 +84,6 @@ func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGr
 // Run function runs the Server
 func (a *Server) Run() {
 	a.engineWaitGroup.Add(1)
-	defer a.engineWaitGroup.Done()
 
 	err := a.httpServer.ListenAndServe()
 
@@ -92,6 +92,7 @@ func (a *Server) Run() {
 			"prefix": "web",
 			"error":  err.Error(),
 		}).Error("API Server shut down unexpectedly")
+		a.engineWaitGroup.Done()
 		process.SafeExit(1)
 	}
 
@@ -100,6 +101,7 @@ func (a *Server) Run() {
 
 // Stop function stops the Server
 func (a *Server) Stop() {
+	a.shuttingDown = true
 	err := a.httpServer.Shutdown(context.Background())
 	if err != nil {
 		panic(err)

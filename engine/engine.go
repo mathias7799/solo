@@ -132,6 +132,7 @@ func (e *MiningEngine) Stop() {
 	e.Workmanager.Stop()
 	e.StatsCollector.Stop()
 	e.BlockConfirmationManager.Stop()
+	e.WebServer.Stop()
 
 	e.waitGroup.Wait()
 	e.Database.DB.Close()
