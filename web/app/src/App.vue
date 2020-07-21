@@ -20,8 +20,10 @@ export default {
   font-family: "Open Sans", sans-serif;
 }
 
-main {
-  max-width: 1000px;
-  margin: 0px auto;
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: none;
 }
 </style>

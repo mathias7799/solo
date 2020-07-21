@@ -1,102 +1,152 @@
 <template>
   <nav>
-    <div class="nav-container">
-      <div class="navigation">
-        <div class="logo">
-          <img src="../assets/logo.svg" alt="Flexpool Logo" />
-          <span>Flexpool SOLO</span>
-        </div>
+    <div class="navbody">
+      <div class="header noselect">
+        <a class="logo" href="/">
+          <img src="../assets/logo.svg" alt="Logo" />
+          flexpool SOLO
+        </a>
+        <button class="hamburger hamburger--spin" type="button">
+          <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+          </span>
+        </button>
       </div>
-      <div class="navbar-end">
-        <div class="navbar-items">
-          <NavbarItem label="Home"></NavbarItem>
-        </div>
-        <NavbarNodeStatus isActive isSyncing blockNumber="1234" />
-      </div>
+      <ul class="navul">
+        <li>
+          <a href="stats">Stats</a>
+        </li>
+        <li>
+          <a href="blocks">Blocks</a>
+        </li>
+        <li>
+          <a href="miners">Node</a>
+        </li>
+        <li>
+          <a href="docs/help" class="help">Docs</a>
+        </li>
+      </ul>
     </div>
   </nav>
 </template>
 
 <script>
-import NavbarItem from "./NavbarItem.vue";
-import NavbarNodeStatus from "./NavbarNodeStatus.vue";
-
 export default {
-  name: "Navbar",
-  components: { NavbarItem, NavbarNodeStatus }
+  name: "Navbar"
 };
 </script>
 
 <style lang="scss" scoped>
 nav {
-  height: 60px;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  height: 100px;
+  box-shadow: 0px 10px 30px 0px #0000000a;
   display: flex;
-  align-content: center;
   justify-content: center;
-  flex-direction: row;
+  background-color: white;
+  z-index: 99;
+}
 
-  .nav-container {
-    width: 100%;
-    max-width: 1000px;
+.navbody {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .logo {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    font-family: "Montserrat", sans-serif;
+    font-weight: bold;
+    font-size: 25px;
+    cursor: pointer;
+    height: 100%;
+    padding: 0px 20px;
+    color: black;
+    text-decoration: none;
+    img {
+      width: 45px;
+      height: 45px;
+      margin-left: 5px;
+      padding-right: 10px;
+    }
+  }
 
-    .navigation {
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin-right: 10px;
+    height: 100%;
+    align-items: center;
+  }
+
+  li {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    display: flex;
+    height: 100%;
+    width: 100px;
+
+    a {
+      display: block;
+      font-weight: bold;
+      color: black;
+      text-decoration: none;
+      transition: 0.05s;
+      font-size: 17px;
+      height: 100%;
       display: flex;
+      align-items: center;
       justify-content: center;
-      align-content: center;
-      flex-direction: row;
-
-      .logo {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        img {
-          width: 50px;
-          width: 50px;
-        }
-
-        span {
-          font-weight: 700;
-          font-size: 20px;
-          margin-left: 20px;
-        }
-      }
-
-      ul {
-        display: flex;
-        li {
-          margin-left: 5px;
-          list-style: none;
-        }
-      }
+      width: 100%;
     }
   }
+}
 
-  .navbar-end {
-    display: flex;
-    justify-content: center;
+.navbody a:hover,
+.navbody .logo:hover {
+  background-color: #fafafa;
+  transition: 0.05s;
+}
 
-    .navbar-items {
-      margin-left: 25px;
-      display: flex;
-      align-items: center;
+.navbody li a:active,
+.navbody .logo:active {
+  background-color: #f5f5f5;
+}
 
-      a {
-        font-weight: 500;
-        font-size: 16px;
-      }
-    }
+.navbody li a.help {
+  background-color: #0069ff;
+  color: white;
+}
 
-    .node-status {
-      margin-left: 45px;
-      display: flex;
-      align-items: center;
+.navbody li a.help:hover {
+  background-color: #0065fa;
+  color: white;
+}
 
-      .block-number {
-        color: #777;
-      }
-    }
-  }
+.navbody li a.help:active {
+  background-color: #0050e5;
+}
+
+.navbody li a:hover {
+  color: #0069ff;
+  transition: 0.05s;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  height: 100px !important;
+}
+
+.hamburger {
+  visibility: hidden;
+  font-size: 40px;
 }
 </style>
