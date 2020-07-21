@@ -65,10 +65,12 @@ func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64
 	statsCollector := stats.NewCollector(database, waitGroup, shareDifficulty)
 	blockConfirmationManager := stats.NewBlockConfirmationManager(database, waitGroup, node, blockConfirmationsRequired)
 
-	webServer := web.NewServer(database, node, waitGroup, webServerBind)
+	workmanager := gateway.NewWorkManager(workmanagerNotificationsBind, shareDifficulty, node, waitGroup)
+
+	webServer := web.NewServer(database, node, waitGroup, workmanager, webServerBind)
 
 	engine := MiningEngine{
-		Workmanager:                  gateway.NewWorkManager(workmanagerNotificationsBind, shareDifficulty, node, waitGroup),
+		Workmanager:                  workmanager,
 		workmanagerNotificationsBind: workmanagerNotificationsBind,
 		shareDifficulty:              shareDifficulty,
 		StatsCollector:               statsCollector,

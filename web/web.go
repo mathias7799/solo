@@ -23,6 +23,7 @@ import (
 	"sync"
 
 	"github.com/flexpool/solo/db"
+	"github.com/flexpool/solo/gateway"
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
 	"github.com/flexpool/solo/process"
@@ -34,6 +35,7 @@ import (
 type Server struct {
 	httpServer      *http.Server
 	database        *db.Database
+	workmanager     *gateway.WorkManager
 	node            *nodeapi.Node
 	engineWaitGroup *sync.WaitGroup
 	shuttingDown    bool
@@ -55,18 +57,25 @@ func MarshalAPIResponse(resp APIResponse) []byte {
 type H map[string]interface{}
 
 // NewServer creates new Server instance
-func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGroup, bind string) *Server {
+func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGroup, workmanager *gateway.WorkManager, bind string) *Server {
 	mux := http.NewServeMux()
 
 	server := Server{
 		database:        db,
 		node:            node,
+		workmanager:     workmanager,
 		engineWaitGroup: engineWaitGroup,
 	}
 
 	mux.HandleFunc("/api/currentBlock", func(w http.ResponseWriter, r *http.Request) {
 
+		// DEBUG ONLY !!!
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
 		currentBlock, err := server.node.BlockNumber()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		w.Write(MarshalAPIResponse(APIResponse{
 			Result: currentBlock,
 			Error:  err,
