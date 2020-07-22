@@ -56,7 +56,6 @@ export default {
   }
 };
 </script>
-<!--
 <style lang="scss" scoped>
 nav {
   position: fixed;
@@ -76,6 +75,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   .logo {
     display: flex;
     align-items: center;
@@ -87,6 +87,7 @@ nav {
     padding: 0px 20px;
     color: black;
     text-decoration: none;
+
     img {
       width: 45px;
       height: 45px;
@@ -103,27 +104,27 @@ nav {
     margin-right: 10px;
     height: 100%;
     align-items: center;
-  }
 
-  li {
-    font-family: "Montserrat", sans-serif;
-    font-weight: 400;
-    display: flex;
-    height: 100%;
-    width: 100px;
-
-    a {
-      display: block;
-      font-weight: bold;
-      color: black;
-      text-decoration: none;
-      transition: 0.05s;
-      font-size: 17px;
-      height: 100%;
+    li {
+      font-family: "Montserrat", sans-serif;
+      font-weight: 400;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
+      height: 100%;
+      width: 100px;
+
+      a {
+        display: block;
+        font-weight: bold;
+        color: black;
+        text-decoration: none;
+        transition: 0.05s;
+        font-size: 17px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
     }
   }
 }
@@ -216,16 +217,16 @@ nav {
           font-size: 25px;
           width: 100%;
         }
-
-        :last-child a:hover {
-          background-color: #0059ef;
-        }
-
-        :first-child {
-          border-top: 1px solid #efefef;
-        }
       }
     }
   }
+
+  .navbody li:last-child a:hover {
+    background-color: #0059ef;
+  }
+
+  .navbody ul li:first-child {
+    border-top: 1px solid #efefef;
+  }
 }
-</style>-->
+</style>
