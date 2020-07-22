@@ -31,11 +31,32 @@
 </template>
 
 <script>
+import $ from "jquery";
 export default {
-  name: "Navbar"
+  name: "Navbar",
+  mounted() {
+    $(".hamburger").click(function() {
+      var nav = $("nav");
+      var body = $("body");
+      var navul = $(".navbody ul");
+
+      var hamburger = $(".hamburger");
+      if (nav.height() <= 100) {
+        nav.animate({ height: "100%" }, 150);
+        body.css("overflow", "hidden");
+        hamburger.addClass("is-active");
+        navul.css("visibility", "visible");
+      } else {
+        nav.css({ height: "100px" });
+        body.css("overflow", "visible");
+        hamburger.removeClass("is-active");
+        navul.css("visibility", "hidden");
+      }
+    });
+  }
 };
 </script>
-
+<!--
 <style lang="scss" scoped>
 nav {
   position: fixed;
@@ -149,4 +170,62 @@ nav {
   visibility: hidden;
   font-size: 40px;
 }
-</style>
+
+@media (max-width: 980px) {
+  nav {
+    overflow: hidden;
+  }
+
+  .navbody .logo {
+    padding: 0px 15px;
+
+    img {
+      margin-left: 0px;
+    }
+  }
+
+  .header {
+    width: 90%;
+  }
+
+  .hamburger {
+    visibility: visible;
+  }
+
+  .navbody {
+    flex-direction: column;
+    justify-content: flex-start;
+
+    ul {
+      display: block;
+      height: 0px;
+      margin-right: 0px;
+      flex-direction: column;
+      width: 100%;
+      visibility: hidden;
+
+      li {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 80px;
+        justify-content: center;
+        border-bottom: 1px solid #efefef;
+
+        a {
+          font-size: 25px;
+          width: 100%;
+        }
+
+        :last-child a:hover {
+          background-color: #0059ef;
+        }
+
+        :first-child {
+          border-top: 1px solid #efefef;
+        }
+      }
+    }
+  }
+}
+</style>-->
