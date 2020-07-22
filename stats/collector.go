@@ -29,8 +29,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-const statCollectionPeriodSecs = 60 // Collect stats every minute
-const keepStatsForSecs = 86400      // Keep stats for one day
+const statCollectionPeriodSecs = 600 // Collect stats every 10 minutes
+const keepStatsForSecs = 86400       // Keep stats for one day
 
 // Collector is a stat collection daemon struct
 type Collector struct {

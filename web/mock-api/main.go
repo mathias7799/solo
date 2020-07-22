@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -12,7 +11,7 @@ import (
 const apiPrefix = "/api/v1"
 
 func getCurrent1MinTimestamp() int64 {
-	return time.Now().Unix() / 60 * 60 // Get rid of the remainder
+	return time.Now().Unix() / 600 * 600 // Get rid of the remainder
 }
 
 type history struct {
@@ -31,26 +30,21 @@ func genTotalHistory() []history {
 
 	current1MinTimestamp := getCurrent1MinTimestamp()
 
-	for i := int64(1440); i != 0; i-- {
-		validShares := float64(rand.Intn(2))
+	for i := int64(144); i != 0; i-- {
+		validShares := float64(200 + rand.Intn(50))
 
-		var staleShares float64
+		staleShares := float64(rand.Intn(10))
 		var invalidShares float64
-
 		if rand.Intn(100) < 30 {
-			staleShares = 1
+			invalidShares = float64(rand.Intn(2))
 		}
 
-		if rand.Intn(100) < 5 {
-			invalidShares = 1
-		}
-
-		effectiveHashrate := validShares * shareDifficulty
+		effectiveHashrate := validShares * shareDifficulty / 600
 
 		totalHistory = append(totalHistory, history{
-			Timestamp: current1MinTimestamp - i*60,
+			Timestamp: current1MinTimestamp - i*600,
 			Effective: effectiveHashrate,
-			Reported:  effectiveHashrate * float64(rand.Intn(100)) / 100,
+			Reported:  effectiveHashrate * float64(0.9),
 			Valid:     validShares,
 			Stale:     staleShares,
 			Invalid:   invalidShares,
@@ -66,12 +60,11 @@ func getSI(number float64) (float64, string) {
 	}
 	symbols := "kMGTPEZY"
 	symbolsLen := len(symbols)
-	i := 0
+	i := 1
 	for {
 		number /= 1000
 		if number < 1000 || i == symbolsLen-1 {
-			fmt.Println(number, i)
-			return math.Pow(1000, float64(i)), string(symbols[i])
+			return math.Pow(1000, float64(i)), string(symbols[i-1])
 		}
 		i++
 	}
@@ -82,8 +75,8 @@ func main() {
 
 	totalHistory := genTotalHistory()
 
-	effectiveHashrate := totalHistory[1440-1].Effective
-	reportedHashrate := totalHistory[1440-1].Reported
+	effectiveHashrate := totalHistory[144-1].Effective
+	reportedHashrate := totalHistory[144-1].Reported
 
 	var validShares float64
 	var staleShares float64
@@ -91,7 +84,7 @@ func main() {
 
 	var averageHashrate float64
 	for _, d := range totalHistory {
-		averageHashrate += d.Effective / 1440
+		averageHashrate += d.Effective / 144
 		validShares += d.Valid
 		staleShares += d.Stale
 		invalidShares += d.Invalid
