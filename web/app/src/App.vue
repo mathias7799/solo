@@ -4,6 +4,7 @@
     <main>
       <h1 class="text-big center m">Statistics</h1>
       <StatsHeader />
+      <MainStats />
       <Charts />
     </main>
   </div>
@@ -13,6 +14,7 @@
 import Navbar from "./components/Navbar.vue";
 import Charts from "./components/Charts.vue";
 import StatsHeader from "./components/StatsHeader.vue";
+import MainStats from "./components/MainStats.vue";
 
 export default {
   name: "App",
@@ -20,6 +22,7 @@ export default {
     Navbar,
     Charts,
     StatsHeader,
+    MainStats,
   },
 };
 </script>

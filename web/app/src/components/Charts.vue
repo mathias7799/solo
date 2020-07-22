@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="simple-wrapper mt20">
+    <div class="simple-wrapper">
       <highcharts class="chart" :options="hashrateChartOptions"></highcharts>
     </div>
     <div class="simple-wrapper mt20">
