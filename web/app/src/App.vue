@@ -3,6 +3,7 @@
     <Navbar />
     <main>
       <h1 class="text-big center m">Statistics</h1>
+      <StatsHeader />
       <Charts />
     </main>
   </div>
@@ -11,13 +12,15 @@
 <script>
 import Navbar from "./components/Navbar.vue";
 import Charts from "./components/Charts.vue";
+import StatsHeader from "./components/StatsHeader.vue";
 
 export default {
   name: "App",
   components: {
     Navbar,
-    Charts
-  }
+    Charts,
+    StatsHeader,
+  },
 };
 </script>
 

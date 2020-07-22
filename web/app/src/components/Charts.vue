@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="simple-wrapper">
+    <div class="simple-wrapper mt20">
       <highcharts class="chart" :options="hashrateChartOptions"></highcharts>
     </div>
     <div class="simple-wrapper mt20">
@@ -16,98 +16,98 @@ export default {
       colors: ["#0069ff", "#2c3e50"],
       chart: {
         height: 200,
-        type: "spline"
+        type: "spline",
       },
       title: {
-        text: "Hashrate"
+        text: "Hashrate",
       },
       xAxis: {
         type: "datetime",
         dateTimeLabelFormats: {
           month: "%e. %b",
-          year: "%b"
+          year: "%b",
         },
         title: {
-          text: "Date"
-        }
+          text: "Date",
+        },
       },
       yAxis: {
         title: {
-          text: "Hashrates"
+          text: "Hashrates",
         },
-        min: 0
+        min: 0,
       },
       tooltip: {
         headerFormat: "<b>{series.name}</b><br>",
-        pointFormat: `{point.x:%e. %b %H:%M}: {point.y:.2f} ${window.chart_hasrate_si}H/s`
+        pointFormat: `{point.x:%e. %b %H:%M}: {point.y:.2f} ${window.chart_hasrate_si}H/s`,
       },
       time: {
-        timezoneOffset: new Date().getTimezoneOffset()
+        timezoneOffset: new Date().getTimezoneOffset(),
       },
 
       series: [
         {
           name: "Effective Hashrate",
           id: "ehashrate",
-          data: []
+          data: [],
         },
         {
           name: "Reported Hashrate",
-          data: []
-        }
-      ]
+          data: [],
+        },
+      ],
     };
 
     var sharesChartOptions = {
       colors: ["#1633ff", "#0069ff", "#031b4e"],
       chart: {
         type: "column",
-        height: 200
+        height: 200,
       },
       title: {
-        text: "Shares"
+        text: "Shares",
       },
       yAxis: {
         title: {
-          text: "Shares"
+          text: "Shares",
         },
-        min: 0
+        min: 0,
       },
       xAxis: {
         type: "datetime",
         dateTimeLabelFormats: {
           month: "%e. %b",
-          year: "%b"
+          year: "%b",
         },
         title: {
-          text: "Date"
-        }
+          text: "Date",
+        },
       },
       tooltip: {
         headerFormat: "<b>{series.name}</b><br>",
-        pointFormat: "{point.x:%e. %b %H:%M}: {point.y} Shares"
+        pointFormat: "{point.x:%e. %b %H:%M}: {point.y} Shares",
       },
       time: {
-        timezoneOffset: new Date().getTimezoneOffset()
+        timezoneOffset: new Date().getTimezoneOffset(),
       },
 
       series: [
         {
           name: "Valid shares",
-          data: []
+          data: [],
         },
         {
           name: "Stale shares",
-          data: []
+          data: [],
         },
         {
           name: "Invalid shares",
-          data: []
-        }
-      ]
+          data: [],
+        },
+      ],
     };
     return { hashrateChartOptions, sharesChartOptions };
-  }
+  },
 };
 </script>
 
