@@ -1,4 +1,4 @@
-# app
+# flexpool-solo
 
 ## Project setup
 ```
