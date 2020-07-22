@@ -5,6 +5,9 @@ Developed with ❤️ to make it as fast as Flexpool.
 
 > WARNING: This project is currently under heavy development
 
+# Screenshots
+TBD
+
 # Why?
 
 There's a bunch of SOLO pools outside, and sadly none of them are transparent enough to have any trust. Also, there were incidents when SOLO pools have just stolen blocks. At Flexpool, we decided to develop a self-hosted open-source solution to all this mess.
