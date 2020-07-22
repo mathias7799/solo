@@ -2,25 +2,28 @@
   <div id="app">
     <Navbar />
     <main>
-      <!--<Charts />-->
+      <h1 class="text-big center m">Statistics</h1>
+      <Charts />
     </main>
   </div>
 </template>
 
 <script>
 import Navbar from "./components/Navbar.vue";
-//import Charts from "./components/Charts.vue";
+import Charts from "./components/Charts.vue";
 
 export default {
   name: "App",
   components: {
-    Navbar
-    //Charts
+    Navbar,
+    Charts
   }
 };
 </script>
 
 <style lang="scss">
+@import "style/_utils.scss";
+@import "style/_fonts.scss";
 * {
   padding: 0px;
   margin: 0px;
@@ -60,6 +63,7 @@ h1.mt {
 @media (max-width: 980px) {
   main {
     width: 90%;
+    margin-top: 130px;
   }
 }
 
@@ -87,5 +91,10 @@ body {
   main {
     margin-top: 130px;
   }
+}
+
+/* Highcharts Title */
+tspan {
+  font-weight: 600;
 }
 </style>
