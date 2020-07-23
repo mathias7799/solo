@@ -34,7 +34,7 @@
             <mark class="big">{{ validShares }}</mark>
           </div>
           <div class="title">
-            Valid (
+            <span>Valid (</span>
             <span id="valid_shares_percentage">{{ validSharesPercentage }}</span>%)
           </div>
         </div>
@@ -43,7 +43,7 @@
             <mark class="big">{{ staleShares }}</mark>
           </div>
           <div class="title">
-            Stale (
+            <span>Stale (</span>
             <span id="stale_shares_percentage">{{ staleSharePercentage }}</span>%)
           </div>
         </div>
@@ -52,7 +52,7 @@
             <mark class="big">{{ invalidShares }}</mark>
           </div>
           <div class="title">
-            Invalid (
+            <span>Invalid (</span>
             <span id="invalid_shares_percentage">{{ invalidSharePercentage }}</span>%)
           </div>
         </div>
