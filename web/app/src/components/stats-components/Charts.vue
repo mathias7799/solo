@@ -112,6 +112,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../style/_wrappers.scss";
-@import "../style/_charts.scss";
+@import "@/style/_wrappers.scss";
+@import "@/style/_charts.scss";
 </style>

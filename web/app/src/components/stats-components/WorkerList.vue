@@ -3,7 +3,7 @@
     <div class="workerstitle-with-filter mt50 mb20">
       <h1>Workers</h1>
       <div class="workers-search">
-        <img src="../assets/search-black.svg" alt="Search Icon" />
+        <img src="@/assets/search-black.svg" alt="Search Icon" />
         <input type="text" id="worker-search" placeholder="Search by name" v-model="searchQuery" />
       </div>
     </div>
@@ -154,8 +154,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../style/_utils.scss";
-@import "../style/_tables.scss";
+@import "@/style/_utils.scss";
+@import "@/style/_tables.scss";
 
 /* Worker seach bar */
 .workerstitle-with-filter,

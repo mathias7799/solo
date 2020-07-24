@@ -17,7 +17,8 @@
     "node-sass": "^4.14.1",
     "popper.js": "^1.16.1",
     "sass-loader": "^9.0.2",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "vue-router": "^3.3.4"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.4.0",

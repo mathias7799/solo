@@ -2,30 +2,20 @@
   <div id="app">
     <Navbar />
     <main>
-      <h1 class="text-big center m">Statistics</h1>
-      <StatsHeader />
-      <MainStats />
-      <Charts />
-      <WorkerList />
+      <router-view></router-view>
     </main>
   </div>
 </template>
 
 <script>
 import Navbar from "./components/Navbar.vue";
-import Charts from "./components/Charts.vue";
-import StatsHeader from "./components/StatsHeader.vue";
-import MainStats from "./components/MainStats.vue";
-import WorkerList from "./components/WorkerList.vue";
+//import Stats from "./components/stats-components/Stats.vue";
 
 export default {
   name: "App",
   components: {
     Navbar,
-    Charts,
-    StatsHeader,
-    MainStats,
-    WorkerList,
+    //Stats,
   },
 };
 </script>
