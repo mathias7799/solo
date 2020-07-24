@@ -81,7 +81,7 @@ export default {
     $.get("http://localhost:8000/api/v1/headerStats", {}, function (data) {
       updateData(data.result);
     }).fail(function (data) {
-      alert("Unable to fetch coinbase balance: " + data.responseJSON.error);
+      alert("Unable to fetch header stats: " + data.responseJSON.error);
     });
   },
 };
