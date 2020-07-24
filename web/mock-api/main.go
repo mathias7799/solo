@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -122,12 +123,12 @@ func main() {
 	workersOnline := rand.Intn(5)
 	workersOffline := rand.Intn(5)
 
-	var workers []worker
+	var workers = make(map[string]worker)
 	for i := 0; i < workersOffline; i++ {
-		workers = append(workers, genRandomWorker(false))
+		workers[strconv.Itoa(rand.Intn(10))] = genRandomWorker(false)
 	}
 	for i := 0; i < workersOnline; i++ {
-		workers = append(workers, genRandomWorker(true))
+		workers[strconv.Itoa(rand.Intn(10))] = genRandomWorker(true)
 	}
 
 	balance := rand.Uint64()
