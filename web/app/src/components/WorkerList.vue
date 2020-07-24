@@ -36,7 +36,7 @@
       <tbody id="rigstats-tbody">
         <template v-for="worker in workers">
           <WorkerListItem
-            :key="worker"
+            :key="worker.workerName"
             :workerName="worker.workerName"
             :reportedHashrate="worker.reportedHashrate"
             :reportedHashrateSIChar="worker.reportedHashrateSIChar"
