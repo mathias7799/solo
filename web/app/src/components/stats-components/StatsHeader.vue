@@ -37,7 +37,7 @@ export default {
   data() {
     return {
       workersOnline: 0,
-      workersOffline: 1,
+      workersOffline: 0,
       balance: 0,
       efficiency: 0,
       ticker: "ETH",
