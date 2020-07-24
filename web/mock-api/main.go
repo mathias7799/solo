@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -25,6 +24,15 @@ type history struct {
 	Invalid   float64 `json:"invalidShares"`
 }
 
+type worker struct {
+	Effective float64 `json:"effectiveHashrate"`
+	Reported  float64 `json:"reportedHashrate"`
+	Valid     float64 `json:"validShares"`
+	Stale     float64 `json:"staleShares"`
+	Invalid   float64 `json:"invalidShares"`
+	LastSeen  int64   `json:"lastSeen"`
+}
+
 const shareDifficulty float64 = 4000000000
 
 func genTotalHistory() []history {
@@ -46,7 +54,7 @@ func genTotalHistory() []history {
 		totalHistory = append(totalHistory, history{
 			Timestamp: current1MinTimestamp - i*600,
 			Effective: effectiveHashrate,
-			Reported:  effectiveHashrate * float64(0.9),
+			Reported:  effectiveHashrate * float64(9+rand.Intn(6)) / 12,
 			Valid:     validShares,
 			Stale:     staleShares,
 			Invalid:   invalidShares,
@@ -54,6 +62,27 @@ func genTotalHistory() []history {
 	}
 
 	return totalHistory
+}
+
+func genRandomWorker(online bool) worker {
+	validShares := float64(50 + rand.Intn(10))
+	staleShares := float64(rand.Intn(5))
+	invalidShares := float64(rand.Intn(2))
+
+	effectiveHashrate := validShares * shareDifficulty / 600
+	lastSeen := int64(rand.Intn(600))
+	if !online {
+		lastSeen += 600
+	}
+
+	return worker{
+		Effective: effectiveHashrate,
+		Reported:  effectiveHashrate * float64(9+rand.Intn(6)) / 12,
+		Valid:     validShares,
+		Stale:     staleShares,
+		Invalid:   invalidShares,
+		LastSeen:  lastSeen,
+	}
 }
 
 func getSI(number float64) (float64, string) {
@@ -92,7 +121,14 @@ func main() {
 
 	workersOnline := rand.Intn(5)
 	workersOffline := rand.Intn(5)
-	fmt.Println(workersOnline)
+
+	var workers []worker
+	for i := 0; i < workersOffline; i++ {
+		workers = append(workers, genRandomWorker(false))
+	}
+	for i := 0; i < workersOnline; i++ {
+		workers = append(workers, genRandomWorker(true))
+	}
 
 	balance := rand.Uint64()
 	chainID := 1
@@ -167,6 +203,13 @@ func main() {
 				},
 			},
 			"error": nil,
+		})
+	})
+
+	r.GET(apiPrefix+"/workers", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"result": workers,
+			"error":  nil,
 		})
 	})
 
