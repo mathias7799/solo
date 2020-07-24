@@ -162,7 +162,7 @@ func NewWorkManager(bind string, shareDiff uint64, node *nodeapi.Node, engineWai
 			"prefix":       "workmanager",
 			"notification": workNotification,
 			"user-agent":   r.UserAgent(),
-		}).Debug("Received new work notification")
+		}).Debug("Received a new work notification")
 
 		if len(workNotification) != 4 {
 			log.Logger.WithFields(logrus.Fields{
