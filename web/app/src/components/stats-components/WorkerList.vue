@@ -55,6 +55,7 @@
               :invalidShares="worker.invalidShares"
               :lastSeen="worker.lastSeen"
               v-if="worker.workerName.includes(searchQuery)"
+              v-on:workerSelected="updateWorker($event)"
             />
           </template>
         </tbody>
@@ -152,6 +153,9 @@ export default {
         if (a[key] > b[key]) return bSort;
         return 0;
       });
+    },
+    updateWorker: function (workerName) {
+      this.$emit("workerSelected", workerName);
     },
   },
   beforeMount() {

@@ -1,6 +1,6 @@
 <template>
   <tr>
-    <td :id="'worker-' + workerName">
+    <td :id="'worker-' + workerName" @click="$emit('workerSelected', workerName)">
       <!-- TODO: onclick="">-->
       <div class="space-between">
         <span class="worker-name black-underline">{{ workerName }}</span>

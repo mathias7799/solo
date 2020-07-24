@@ -14,6 +14,9 @@ import $ from "jquery";
 import { getSi } from "@/utils/format.js";
 
 export default {
+  props: {
+    selectedWorker: String,
+  },
   data() {
     var hashrateChartOptions = {
       colors: ["#0069ff", "#2c3e50"],
@@ -110,68 +113,87 @@ export default {
     };
     return { hashrateChartOptions, sharesChartOptions };
   },
+  watch: {
+    // whenever question changes, this function will run
+    selectedWorker: function (newWorkerName) {
+      this.updateChart(newWorkerName);
+    },
+  },
+
   mounted() {
-    const updateData = (
-      effectiveHashrate,
-      reportedHashrate,
-      validShares,
-      staleShares,
-      invalidShares,
-      siChar
-    ) => {
-      this.hashrateChartOptions.series[0].data = effectiveHashrate;
-      this.hashrateChartOptions.series[1].data = reportedHashrate;
-      this.sharesChartOptions.series[0].data = validShares;
-      this.sharesChartOptions.series[1].data = staleShares;
-      this.sharesChartOptions.series[2].data = invalidShares;
-      this.hashrateChartOptions.tooltip.pointFormat =
-        `{point.x:%e. %b %H:%M}: {point.y:.2f} ` + siChar + `H/s`;
-    };
-    $.get("http://localhost:8000/api/v1/history", {}, function (data) {
-      var avgEffectiveHashrate = [];
+    this.updateChart("");
+  },
+  methods: {
+    updateChart: function (workerName) {
+      console.log('updating chart for "' + workerName + '"');
+      const updateData = (
+        effectiveHashrate,
+        reportedHashrate,
+        validShares,
+        staleShares,
+        invalidShares,
+        siChar
+      ) => {
+        this.hashrateChartOptions.series[0].data = effectiveHashrate;
+        this.hashrateChartOptions.series[1].data = reportedHashrate;
+        this.sharesChartOptions.series[0].data = validShares;
+        this.sharesChartOptions.series[1].data = staleShares;
+        this.sharesChartOptions.series[2].data = invalidShares;
+        this.hashrateChartOptions.tooltip.pointFormat =
+          `{point.x:%e. %b %H:%M}: {point.y:.2f} ` + siChar + `H/s`;
+      };
+      console.log("params", { workerName });
+      $.get("http://localhost:8000/api/v1/history", { workerName }, function (
+        data
+      ) {
+        var avgEffectiveHashrate = [];
 
-      data.result.forEach((item) => {
-        avgEffectiveHashrate.push(item.effectiveHashrate);
+        data.result.forEach((item) => {
+          avgEffectiveHashrate.push(item.effectiveHashrate);
+        });
+
+        // Calculating average
+        avgEffectiveHashrate =
+          avgEffectiveHashrate.reduce((a, b) => a + b, 0) -
+          avgEffectiveHashrate.length;
+
+        var si = getSi(avgEffectiveHashrate);
+
+        var effectiveHashrateHistory = [];
+        var reportedHashrateHistory = [];
+        var validSharesHistory = [];
+        var staleSharesHistory = [];
+        var invalidSharesHistory = [];
+
+        data.result.forEach((item) => {
+          effectiveHashrateHistory.push([
+            item.timestamp * 1000,
+            item.effectiveHashrate / si[0],
+          ]);
+          reportedHashrateHistory.push([
+            item.timestamp * 1000,
+            item.reportedHashrate / si[0],
+          ]);
+          validSharesHistory.push([item.timestamp * 1000, item.validShares]);
+          staleSharesHistory.push([item.timestamp * 1000, item.staleShares]);
+          invalidSharesHistory.push([
+            item.timestamp * 1000,
+            item.invalidShares,
+          ]);
+        });
+
+        updateData(
+          effectiveHashrateHistory,
+          reportedHashrateHistory,
+          validSharesHistory,
+          staleSharesHistory,
+          invalidSharesHistory,
+          si[1]
+        );
+      }).fail(function (data) {
+        alert("Unable to fetch history: " + data.responseJSON.error);
       });
-
-      // Calculating average
-      avgEffectiveHashrate =
-        avgEffectiveHashrate.reduce((a, b) => a + b, 0) -
-        avgEffectiveHashrate.length;
-
-      var si = getSi(avgEffectiveHashrate);
-
-      var effectiveHashrateHistory = [];
-      var reportedHashrateHistory = [];
-      var validSharesHistory = [];
-      var staleSharesHistory = [];
-      var invalidSharesHistory = [];
-
-      data.result.forEach((item) => {
-        effectiveHashrateHistory.push([
-          item.timestamp * 1000,
-          item.effectiveHashrate / si[0],
-        ]);
-        reportedHashrateHistory.push([
-          item.timestamp * 1000,
-          item.reportedHashrate / si[0],
-        ]);
-        validSharesHistory.push([item.timestamp * 1000, item.validShares]);
-        staleSharesHistory.push([item.timestamp * 1000, item.staleShares]);
-        invalidSharesHistory.push([item.timestamp * 1000, item.invalidShares]);
-      });
-
-      updateData(
-        effectiveHashrateHistory,
-        reportedHashrateHistory,
-        validSharesHistory,
-        staleSharesHistory,
-        invalidSharesHistory,
-        si[1]
-      );
-    }).fail(function (data) {
-      alert("Unable to fetch history: " + data.responseJSON.error);
-    });
+    },
   },
 };
 </script>
