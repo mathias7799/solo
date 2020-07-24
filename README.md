@@ -39,10 +39,11 @@ TBD
 - TBD
 
 ### Front End
-- [ ] Base Website
-- [ ] General & Per worker Statistics
+- [x] Base Website
+- [x] General & Per worker Statistics
 - [ ] Network statistics
 - [ ] Node Health monitoring 
+- [ ] Implement a real API (Right now development version uses a mock API)
 - TBD
 
 ### Documentation
