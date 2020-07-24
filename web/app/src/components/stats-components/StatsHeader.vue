@@ -44,9 +44,8 @@ export default {
       price: 0,
     };
   },
-  async created() {
+  created() {
     const updateData = (data) => {
-      console.log(data);
       this.balance =
         Math.round(data.coinbaseBalance / Math.pow(10, 12)) / Math.pow(10, 6);
       if (window.innerWidth < 500) {
@@ -67,7 +66,6 @@ export default {
       getCurrencyPrice(
         currencyDetails.coingeckoId,
         (data) => {
-          console.log("price", data[currencyDetails.coingeckoId]["usd"]);
           this.price = data[currencyDetails.coingeckoId]["usd"];
         },
         (data) => {
