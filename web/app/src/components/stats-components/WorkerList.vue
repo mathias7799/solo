@@ -106,13 +106,13 @@ export default {
           workerName,
           reportedHashrate:
             Math.round(
-              (data[workerName].reportedHashrate / reportedSI[0]) * 100
-            ) / 100,
+              (data[workerName].reportedHashrate / reportedSI[0]) * 10
+            ) / 10,
           reportedHashrateSIChar: reportedSI[1],
           effectiveHashrate:
             Math.round(
-              (data[workerName].effectiveHashrate / effectiveSI[0]) * 100
-            ) / 100,
+              (data[workerName].effectiveHashrate / effectiveSI[0]) * 10
+            ) / 10,
           effectiveHashrateSIChar: effectiveSI[1],
           validShares: data[workerName].validShares,
           staleShares: data[workerName].staleShares,
