@@ -125,7 +125,6 @@ export default {
   },
   methods: {
     updateChart: function (workerName) {
-      console.log('updating chart for "' + workerName + '"');
       const updateData = (
         effectiveHashrate,
         reportedHashrate,

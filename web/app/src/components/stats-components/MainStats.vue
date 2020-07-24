@@ -72,6 +72,9 @@ import $ from "jquery";
 
 export default {
   name: "MainStats",
+  props: {
+    selectedWorker: String,
+  },
   data() {
     return {
       // Hashrate
@@ -86,25 +89,38 @@ export default {
       totalShares: 0,
     };
   },
+  watch: {
+    selectedWorker: function (workerName) {
+      this.updateStats(workerName);
+    },
+  },
   created() {
-    const updateData = (data) => {
-      this.siChar = data.si.char;
-      var siDiv = data.si.div;
-      this.effective = Math.round((data.hashrate.effective / siDiv) * 10) / 10;
-      this.reported = Math.round((data.hashrate.reported / siDiv) * 10) / 10;
-      this.average = Math.round((data.hashrate.average / siDiv) * 10) / 10;
+    this.updateStats("");
+  },
+  methods: {
+    updateStats: function (workerName) {
+      const updateData = (data) => {
+        this.siChar = data.si.char;
+        var siDiv = data.si.div;
+        this.effective =
+          Math.round((data.hashrate.effective / siDiv) * 10) / 10;
+        this.reported = Math.round((data.hashrate.reported / siDiv) * 10) / 10;
+        this.average = Math.round((data.hashrate.average / siDiv) * 10) / 10;
 
-      this.validShares = data.shares.valid;
-      this.staleShares = data.shares.stale;
-      this.invalidShares = data.shares.invalid;
-      this.totalShares =
-        this.validShares + this.staleShares + this.invalidShares;
-    };
-    $.get("http://localhost:8000/api/v1/stats", {}, function (data) {
-      updateData(data.result);
-    }).fail(function (data) {
-      alert("Unable to fetch stats: " + data.responseJSON.error);
-    });
+        this.validShares = data.shares.valid;
+        this.staleShares = data.shares.stale;
+        this.invalidShares = data.shares.invalid;
+        this.totalShares =
+          this.validShares + this.staleShares + this.invalidShares;
+      };
+      $.get("http://localhost:8000/api/v1/stats", { workerName }, function (
+        data
+      ) {
+        updateData(data.result);
+      }).fail(function (data) {
+        alert("Unable to fetch stats: " + data.responseJSON.error);
+      });
+    },
   },
 };
 </script>
