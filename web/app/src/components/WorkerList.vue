@@ -1,56 +1,66 @@
 <template>
-  <div class="table-wrapper mt20" id="workers-table">
-    <table id="rigstats">
-      <thead id="rigstats-thead">
-        <tr>
-          <th class="black-underline noselect" @click="sort('workerName')">
-            Name
-            <WorkerListSortIcon :sortValue="sortKeys.workerName" />
-          </th>
-          <th class="black-underline noselect" @click="sort('reportedHashrate')">
-            Reported
-            <WorkerListSortIcon :sortValue="sortKeys.reportedHashrate" />
-          </th>
-          <th class="black-underline noselect" @click="sort('effectiveHashrate')">
-            Effective
-            <WorkerListSortIcon :sortValue="sortKeys.effectiveHashrate" />
-          </th>
-          <th class="black-underline noselect" @click="sort('validShares')">
-            Valid
-            <WorkerListSortIcon :sortValue="sortKeys.validShares" />
-          </th>
-          <th class="black-underline noselect" @click="sort('staleShares')">
-            Stale
-            <WorkerListSortIcon :sortValue="sortKeys.staleShares" />
-          </th>
-          <th class="black-underline noselect" @click="sort('invalidShares')">
-            Invalid
-            <WorkerListSortIcon :sortValue="sortKeys.invalidShares" />
-          </th>
-          <th class="black-underline noselect" @click="sort('lastSeen')">
-            Last Seen
-            <WorkerListSortIcon :sortValue="sortKeys.lastSeen" />
-          </th>
-        </tr>
-      </thead>
-      <tbody id="rigstats-tbody">
-        <template v-for="worker in workers">
-          <WorkerListItem
-            :key="worker.workerName"
-            :workerName="worker.workerName"
-            :reportedHashrate="worker.reportedHashrate"
-            :reportedHashrateSIChar="worker.reportedHashrateSIChar"
-            :effectiveHashrate="worker.effectiveHashrate"
-            :effectiveHashrateSIChar="worker.effectiveHashrateSIChar"
-            :validShares="worker.validShares"
-            :staleShares="worker.staleShares"
-            :invalidShares="worker.invalidShares"
-            :lastSeen="worker.lastSeen"
-            :lastSeenHuman="worker.lastSeenHuman"
-          />
-        </template>
-      </tbody>
-    </table>
+  <div>
+    <div class="workerstitle-with-filter mt50 mb20">
+      <h1>Workers</h1>
+      <div class="workers-search">
+        <img src="../assets/search-black.svg" alt="Search Icon" />
+        <input type="text" id="worker-search" placeholder="Search by name" v-model="searchQuery" />
+      </div>
+    </div>
+    <div class="table-wrapper mt20" id="workers-table">
+      <table id="rigstats">
+        <thead id="rigstats-thead">
+          <tr>
+            <th class="black-underline noselect" @click="sort('workerName')">
+              Name
+              <WorkerListSortIcon :sortValue="sortKeys.workerName" />
+            </th>
+            <th class="black-underline noselect" @click="sort('reportedHashrate')">
+              Reported
+              <WorkerListSortIcon :sortValue="sortKeys.reportedHashrate" />
+            </th>
+            <th class="black-underline noselect" @click="sort('effectiveHashrate')">
+              Effective
+              <WorkerListSortIcon :sortValue="sortKeys.effectiveHashrate" />
+            </th>
+            <th class="black-underline noselect" @click="sort('validShares')">
+              Valid
+              <WorkerListSortIcon :sortValue="sortKeys.validShares" />
+            </th>
+            <th class="black-underline noselect" @click="sort('staleShares')">
+              Stale
+              <WorkerListSortIcon :sortValue="sortKeys.staleShares" />
+            </th>
+            <th class="black-underline noselect" @click="sort('invalidShares')">
+              Invalid
+              <WorkerListSortIcon :sortValue="sortKeys.invalidShares" />
+            </th>
+            <th class="black-underline noselect" @click="sort('lastSeen')">
+              Last Seen
+              <WorkerListSortIcon :sortValue="sortKeys.lastSeen" />
+            </th>
+          </tr>
+        </thead>
+        <tbody id="rigstats-tbody">
+          <template v-for="worker in workers">
+            <WorkerListItem
+              :key="worker.workerName"
+              :workerName="worker.workerName"
+              :reportedHashrate="worker.reportedHashrate"
+              :reportedHashrateSIChar="worker.reportedHashrateSIChar"
+              :effectiveHashrate="worker.effectiveHashrate"
+              :effectiveHashrateSIChar="worker.effectiveHashrateSIChar"
+              :validShares="worker.validShares"
+              :staleShares="worker.staleShares"
+              :invalidShares="worker.invalidShares"
+              :lastSeen="worker.lastSeen"
+              :lastSeenHuman="worker.lastSeenHuman"
+              v-if="worker.workerName.includes(searchQuery)"
+            />
+          </template>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -69,6 +79,7 @@ export default {
       ascending: false,
       sortedKey: "",
       hasInitialized: false,
+      searchQuery: "",
       sortKeys: {
         // Descending: -1, No sort: 0, Ascending: 1
         workerName: 0,
@@ -145,4 +156,35 @@ export default {
 <style lang="scss" scoped>
 @import "../style/_utils.scss";
 @import "../style/_tables.scss";
+
+/* Worker seach bar */
+.workerstitle-with-filter,
+.workers-search {
+  display: flex;
+  align-items: center;
+}
+
+.workerstitle-with-filter img {
+  margin-left: 25px;
+  margin-right: 10px;
+  height: 20px;
+  width: 20px;
+}
+
+#worker-search {
+  height: 30px;
+  border: none;
+  border-bottom: 1px solid black;
+  border-radius: 0px;
+  font-size: 15px;
+  width: 140px;
+}
+
+#worker-search:hover {
+  border-bottom: 2px solid black;
+}
+
+#worker-search:focus {
+  border-bottom: 2px solid #0069ff;
+}
 </style>
