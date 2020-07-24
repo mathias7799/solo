@@ -6,7 +6,8 @@ Developed with ❤️ to make it as fast as Flexpool.
 > WARNING: This project is currently under heavy development
 
 # Screenshots
-TBD
+Development preview:
+![Development Preview Screenshot](https://github.com/flexpool/solo/raw/master/assets/dev-screenshot.png)
 
 # Why?
 
