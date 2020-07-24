@@ -11,13 +11,17 @@ Development preview:
 
 There's a bunch of SOLO pools outside, and sadly none of them are transparent enough to have any trust. Also, there were incidents when SOLO pools have just stolen blocks. At Flexpool, we decided to develop a self-hosted open-source solution to all this mess.
 
-### Portability
+### 💼  Portability
 
 The Flexpool Solo is a highly portable software, and the only dependency you need is the Ethereum node. Also, it uses an embedded lightning-fast key-value LevelDB database, so there is no need to set up an external databases.
 
-### Speed
+### 🏎  Speed
 
 The Flexpool SOLO is written in the Go Programming Language, which makes it very speedy and more profitable accordingly.
+
+### ⚡️  Optimized Code
+
+The Flexpool SOLO is written by one of the creators of the Flexpool, and the source code has some of Flexpool's optimization techniques applied. This pool is designed to be the MOST profitable among all other solo Ethereum pools.
 
 # Installation
 
