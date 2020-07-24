@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,7 +35,7 @@ func genTotalHistory() []history {
 	for i := int64(144); i != 0; i-- {
 		validShares := float64(200 + rand.Intn(50))
 
-		staleShares := float64(rand.Intn(10))
+		staleShares := float64(rand.Intn(20))
 		var invalidShares float64
 		if rand.Intn(100) < 30 {
 			invalidShares = float64(rand.Intn(2))
@@ -71,16 +73,29 @@ func getSI(number float64) (float64, string) {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	r := gin.Default()
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+	}))
 
 	totalHistory := genTotalHistory()
 
 	effectiveHashrate := totalHistory[144-1].Effective
 	reportedHashrate := totalHistory[144-1].Reported
 
-	var validShares float64
-	var staleShares float64
-	var invalidShares float64
+	validShares := totalHistory[15].Valid
+	staleShares := totalHistory[15].Stale
+	invalidShares := totalHistory[15].Invalid
+
+	efficiency := validShares / (validShares + staleShares + invalidShares) * 100
+
+	workersOnline := rand.Intn(5)
+	workersOffline := rand.Intn(5)
+	fmt.Println(workersOnline)
+
+	balance := rand.Uint64()
+	chainID := 1
 
 	var averageHashrate float64
 	for _, d := range totalHistory {
@@ -106,10 +121,30 @@ func main() {
 		})
 	})
 
+	r.GET(apiPrefix+"/coinbaseBalance", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"result": balance,
+			"error":  nil,
+		})
+	})
+
 	r.GET(apiPrefix+"/totalHistory", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"result": totalHistory,
 			"error":  nil,
+		})
+	})
+
+	r.GET(apiPrefix+"/headerStats", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"result": gin.H{
+				"workersOnline":   workersOnline,
+				"workersOffline":  workersOffline,
+				"coinbaseBalance": balance,
+				"efficiency":      efficiency,
+				"chainId":         chainID,
+			},
+			"error": nil,
 		})
 	})
 

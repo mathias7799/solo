@@ -3,8 +3,8 @@
     <div class="stat">
       <div class="sec">Workers Online/Offline</div>
       <div class="main high-letter-spacing" id="online-offline-workers">
-        <mark>{{ activeWorkers }}</mark>
-        <span>/{{ inactiveWorkers }}</span>
+        <mark>{{ workersOnline }}</mark>
+        <span>/{{ workersOffline }}</span>
       </div>
     </div>
     <div class="stat">
@@ -13,32 +13,78 @@
         <div class="flexcol">
           <div>
             <span class="balance">{{ balance }}</span>
-            <div class="lower">ETH</div>
+            <div class="lower">{{ ticker }}</div>
           </div>
-          <div class="gray subbalance">{{ balanceUSD }} USD</div>
+          <div class="gray subbalance">{{ Math.round(price * balance * 100) / 100 }} USD</div>
         </div>
       </div>
     </div>
     <div class="stat">
       <div class="sec">Efficiency</div>
       <div class="main">
-        <mark id="valid_shares_percentage_big">{{ validSharesPercentage }}</mark>%
+        <mark id="valid_shares_percentage_big">{{ efficiency }}</mark>%
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import $ from "jquery";
+import { getCurrencyDetails, getCurrencyPrice } from "@/utils/currency.js";
+
 export default {
   name: "StatsHeader",
   data() {
     return {
-      activeWorkers: 5,
-      inactiveWorkers: 1,
-      balance: 1.23456,
-      validSharesPercentage: 99.8,
-      balanceUSD: 295.22,
+      workersOnline: 0,
+      workersOffline: 1,
+      balance: 0,
+      efficiency: 0,
+      ticker: "ETH",
+      price: 0,
     };
+  },
+  async created() {
+    const updateData = (data) => {
+      console.log(data);
+      this.balance =
+        Math.round(data.coinbaseBalance / Math.pow(10, 12)) / Math.pow(10, 6);
+      if (window.innerWidth < 500) {
+        this.balance =
+          Math.round(this.balance * Math.pow(10, 3)) / Math.pow(10, 3);
+      }
+
+      this.onlineWorkers = data.onlineWorkers;
+      this.offlineWorkers = data.workersOffline;
+      this.efficiency = Math.round(data.efficiency * 10) / 10;
+
+      var currencyDetails = getCurrencyDetails(data.chainId);
+      this.ticker = currencyDetails.ticker;
+      if (this.ticker == undefined) {
+        this.ticker = "---";
+      }
+
+      getCurrencyPrice(
+        currencyDetails.coingeckoId,
+        (data) => {
+          console.log("price", data[currencyDetails.coingeckoId]["usd"]);
+          this.price = data[currencyDetails.coingeckoId]["usd"];
+        },
+        (data) => {
+          if (currencyDetails.coingeckoId != undefined) {
+            alert("Unable to get currency price: " + data.responseText);
+          } else {
+            this.price = NaN;
+          }
+        }
+      );
+    };
+
+    $.get("http://localhost:8000/api/v1/headerStats", {}, function (data) {
+      updateData(data.result);
+    }).fail(function (data) {
+      alert("Unable to fetch coinbase balance: " + data.responseJSON.error);
+    });
   },
 };
 </script>
