@@ -20,9 +20,9 @@ type history struct {
 	Timestamp int64   `json:"timestamp"`
 	Effective float64 `json:"effectiveHashrate"`
 	Reported  float64 `json:"reportedHashrate"`
-	Valid     float64 `json:"valid_shares"`
-	Stale     float64 `json:"stale_shares"`
-	Invalid   float64 `json:"invalid_shares"`
+	Valid     float64 `json:"validShares"`
+	Stale     float64 `json:"staleShares"`
+	Invalid   float64 `json:"invalidShares"`
 }
 
 const shareDifficulty float64 = 4000000000
@@ -128,7 +128,7 @@ func main() {
 		})
 	})
 
-	r.GET(apiPrefix+"/totalHistory", func(c *gin.Context) {
+	r.GET(apiPrefix+"/history", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"result": totalHistory,
 			"error":  nil,
