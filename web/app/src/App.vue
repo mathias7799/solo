@@ -6,6 +6,7 @@
       <StatsHeader />
       <MainStats />
       <Charts />
+      <WorkerList />
     </main>
   </div>
 </template>
@@ -15,6 +16,7 @@ import Navbar from "./components/Navbar.vue";
 import Charts from "./components/Charts.vue";
 import StatsHeader from "./components/StatsHeader.vue";
 import MainStats from "./components/MainStats.vue";
+import WorkerList from "./components/WorkerList.vue";
 
 export default {
   name: "App",
@@ -23,6 +25,7 @@ export default {
     Charts,
     StatsHeader,
     MainStats,
+    WorkerList,
   },
 };
 </script>
@@ -42,6 +45,7 @@ main {
   margin: 0px auto;
   margin-top: 140px;
   min-height: calc(100vh - 500px);
+  margin-bottom: 100px;
 }
 
 h1.center {
