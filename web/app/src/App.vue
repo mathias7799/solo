@@ -9,13 +9,11 @@
 
 <script>
 import Navbar from "./components/Navbar.vue";
-//import Stats from "./components/stats-components/Stats.vue";
 
 export default {
   name: "App",
   components: {
     Navbar,
-    //Stats,
   },
 };
 </script>
