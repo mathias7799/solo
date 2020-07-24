@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
@@ -125,7 +126,7 @@ func main() {
 
 	var workers = make(map[string]worker)
 	for i := 0; i < workersOffline; i++ {
-		workers[strconv.Itoa(rand.Intn(10))] = genRandomWorker(false)
+		workers[strconv.Itoa(rand.Intn(10))+"-off"] = genRandomWorker(false)
 	}
 	for i := 0; i < workersOnline; i++ {
 		workers[strconv.Itoa(rand.Intn(10))] = genRandomWorker(true)
@@ -166,10 +167,20 @@ func main() {
 	})
 
 	r.GET(apiPrefix+"/history", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"result": totalHistory,
-			"error":  nil,
-		})
+		rand.Seed(time.Now().UnixNano())
+		fmt.Println("param", c.Param("workerName"), c.Params)
+		fmt.Println(c.Request.URL.Query())
+		if len(c.Request.URL.Query()["workerName"]) == 0 || c.Request.URL.Query()["workerName"][0] == "" {
+			c.JSON(200, gin.H{
+				"result": totalHistory,
+				"error":  nil,
+			})
+		} else {
+			c.JSON(200, gin.H{
+				"result": genTotalHistory(),
+				"error":  nil,
+			})
+		}
 	})
 
 	r.GET(apiPrefix+"/headerStats", func(c *gin.Context) {
@@ -186,21 +197,56 @@ func main() {
 	})
 
 	r.GET(apiPrefix+"/stats", func(c *gin.Context) {
+		var localEffective float64
+		var localReported float64
+		var localAverage float64
+
+		var localValid uint64
+		var localStale uint64
+		var localInvalid uint64
+
+		var localSiChar string
+		var localSiDiv float64 = 1
+
+		if len(c.Request.URL.Query()["workerName"]) == 0 || c.Request.URL.Query()["workerName"][0] == "" {
+			localEffective = effectiveHashrate
+			localReported = reportedHashrate
+			localAverage = averageHashrate
+
+			localValid = uint64(validShares)
+			localStale = uint64(staleShares)
+			localInvalid = uint64(invalidShares)
+
+			localSiDiv, localSiChar = siDiv, siChar
+		} else {
+			workerName := c.Request.URL.Query()["workerName"][0]
+			worker := workers[workerName]
+
+			localEffective = worker.Effective
+			localReported = worker.Reported
+			localAverage = worker.Effective // There's no average property in worker struct
+
+			localValid = uint64(worker.Valid)
+			localStale = uint64(worker.Stale)
+			localInvalid = uint64(worker.Invalid)
+
+			localSiDiv, localSiChar = getSI(localEffective)
+		}
 		c.JSON(200, gin.H{
 			"result": gin.H{
 				"hashrate": gin.H{
-					"effective": effectiveHashrate,
-					"reported":  reportedHashrate,
-					"average":   averageHashrate,
+					"effective": localEffective,
+					"reported":  localReported,
+					"average":   localAverage,
 				},
 				"shares": gin.H{
-					"valid":   validShares,
-					"stale":   staleShares,
-					"invalid": invalidShares,
+					"valid":   localValid,
+					"stale":   localStale,
+					"invalid": localInvalid,
 				},
 				"si": gin.H{
-					"div":  siDiv,
-					"char": siChar,
+					"div":  localSiDiv,
+					"char": localSiChar,
 				},
 			},
 			"error": nil,
