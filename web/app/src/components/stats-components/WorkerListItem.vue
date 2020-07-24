@@ -1,9 +1,12 @@
 <template>
   <tr>
-    <td :id="'worker-' + workerName" @click="$emit('workerSelected', workerName)">
+    <td :id="'worker-' + workerName">
       <!-- TODO: onclick="">-->
       <div class="space-between">
-        <span class="worker-name black-underline">{{ workerName }}</span>
+        <span
+          class="worker-name black-underline"
+          @click="$emit('workerSelected', workerName)"
+        >{{ workerName }}</span>
         <span class="rig-offline" v-if="lastSeen > 600">Offline</span>
       </div>
     </td>
