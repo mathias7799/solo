@@ -156,6 +156,11 @@ func main() {
 					"reported":  reportedHashrate,
 					"average":   averageHashrate,
 				},
+				"shares": gin.H{
+					"valid":   validShares,
+					"stale":   staleShares,
+					"invalid": invalidShares,
+				},
 				"si": gin.H{
 					"div":  siDiv,
 					"char": siChar,
