@@ -35,7 +35,9 @@
           </div>
           <div class="title">
             <span>Valid (</span>
-            <span id="valid_shares_percentage">{{ validSharesPercentage }}</span>%)
+            <span
+              id="valid_shares_percentage"
+            >{{ Math.round(validShares / totalShares * 100) / 100 }}</span>%)
           </div>
         </div>
         <div class="stat">
@@ -44,7 +46,9 @@
           </div>
           <div class="title">
             <span>Stale (</span>
-            <span id="stale_shares_percentage">{{ staleSharePercentage }}</span>%)
+            <span
+              id="stale_shares_percentage"
+            >{{ Math.round(staleShares / totalShares * 100) / 100 }}</span>%)
           </div>
         </div>
         <div class="stat">
@@ -53,7 +57,9 @@
           </div>
           <div class="title">
             <span>Invalid (</span>
-            <span id="invalid_shares_percentage">{{ invalidSharePercentage }}</span>%)
+            <span
+              id="invalid_shares_percentage"
+            >{{ Math.round(invalidShares / totalShares * 100) / 100 }}</span>%)
           </div>
         </div>
       </div>
@@ -62,23 +68,43 @@
 </template>
 
 <script>
+import $ from "jquery";
+
 export default {
   name: "MainStats",
   data() {
     return {
       // Hashrate
-      siChar: "G",
-      effective: 13.37,
-      reported: 12.95,
-      average: 14.33,
+      siChar: "",
+      effective: 0,
+      reported: 0,
+      average: 0,
       // Shares
-      validShares: 123456,
-      staleShares: 246,
-      invalidShares: 1,
-      validSharesPercentage: 99.8,
-      staleSharePercentage: 0.2,
-      invalidSharePercentage: 0,
+      validShares: 0,
+      staleShares: 0,
+      invalidShares: 0,
+      totalShares: 0,
     };
+  },
+  created() {
+    const updateData = (data) => {
+      this.siChar = data.si.char;
+      var siDiv = data.si.div;
+      this.effective = Math.round((data.hashrate.effective / siDiv) * 10) / 10;
+      this.reported = Math.round((data.hashrate.reported / siDiv) * 10) / 10;
+      this.average = Math.round((data.hashrate.average / siDiv) * 10) / 10;
+
+      this.validShares = data.shares.valid;
+      this.staleShares = data.shares.stale;
+      this.invalidShares = data.shares.invalid;
+      this.totalShares =
+        this.validShares + this.staleShares + this.invalidShares;
+    };
+    $.get("http://localhost:8000/api/v1/stats", {}, function (data) {
+      updateData(data.result);
+    }).fail(function (data) {
+      alert("Unable to fetch stats: " + data.responseJSON.error);
+    });
   },
 };
 </script>
