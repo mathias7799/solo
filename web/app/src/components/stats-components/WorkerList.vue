@@ -54,7 +54,6 @@
               :staleShares="worker.staleShares"
               :invalidShares="worker.invalidShares"
               :lastSeen="worker.lastSeen"
-              :lastSeenHuman="worker.lastSeenHuman"
               v-if="worker.workerName.includes(searchQuery)"
             />
           </template>
@@ -65,6 +64,8 @@
 </template>
 
 <script>
+import $ from "jquery";
+import { getSi } from "@/utils/format.js";
 import WorkerListItem from "./WorkerListItem.vue";
 import WorkerListSortIcon from "./WorkerListSortIcon.vue";
 
@@ -90,33 +91,39 @@ export default {
         invalidShares: 0,
         lastSeen: 0,
       },
-      workers: [
-        {
-          workerName: "rig1",
-          reportedHashrate: 13.37,
-          reportedHashrateSIChar: "M",
-          effectiveHashrate: 23.37,
-          effectiveSIChar: "M",
-          validShares: 1,
-          staleShares: 2,
-          invalidShares: 3,
-          lastSeen: 32,
-          lastSeenHuman: "32 seconds ago",
-        },
-        {
-          workerName: "rig2",
-          reportedHashrate: 14.47,
-          reportedHashrateSIChar: "M",
-          effectiveHashrate: 21.17,
-          effectiveSIChar: "M",
-          validShares: 3,
-          staleShares: 2,
-          invalidShares: 1,
-          lastSeen: 44,
-          lastSeenHuman: "44 seconds ago",
-        },
-      ],
+      workers: [],
     };
+  },
+  created() {
+    $.get("http://localhost:8000/api/v1/workers", {}, (data) => {
+      data = data.result;
+      var workers = [];
+      for (const workerName in data) {
+        var effectiveSI = getSi(data[workerName].effectiveHashrate);
+        var reportedSI = getSi(data[workerName].reportedHashrate);
+
+        workers.push({
+          workerName,
+          reportedHashrate:
+            Math.round(
+              (data[workerName].reportedHashrate / reportedSI[0]) * 100
+            ) / 100,
+          reportedHashrateSIChar: reportedSI[1],
+          effectiveHashrate:
+            Math.round(
+              (data[workerName].effectiveHashrate / effectiveSI[0]) * 100
+            ) / 100,
+          effectiveHashrateSIChar: effectiveSI[1],
+          validShares: data[workerName].validShares,
+          staleShares: data[workerName].staleShares,
+          invalidShares: data[workerName].invalidShares,
+          lastSeen: data[workerName].lastSeen,
+        });
+      }
+      this.workers = workers;
+    }).fail(function (data) {
+      alert("Unable to fetch stats: " + data.responseJSON.error);
+    });
   },
   methods: {
     sort: function (key) {
