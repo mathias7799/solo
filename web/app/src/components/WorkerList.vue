@@ -3,33 +3,33 @@
     <table id="rigstats">
       <thead id="rigstats-thead">
         <tr>
-          <th class="black-underline noselect">
+          <th class="black-underline noselect" @click="sort('workerName')">
             Name
-            <img src="../assets/sort/sort-up.svg" alt="Sort Icon" />
+            <WorkerListSortIcon :sortValue="sortKeys.workerName" />
           </th>
-          <th class="black-underline noselect">
+          <th class="black-underline noselect" @click="sort('reportedHashrate')">
             Reported
-            <img src="../assets/sort/sort.svg" alt="Sort Icon" />
+            <WorkerListSortIcon :sortValue="sortKeys.reportedHashrate" />
           </th>
-          <th class="black-underline noselect">
+          <th class="black-underline noselect" @click="sort('effectiveHashrate')">
             Effective
-            <img src="../assets/sort/sort.svg" alt="Sort Icon" />
+            <WorkerListSortIcon :sortValue="sortKeys.effectiveHashrate" />
           </th>
-          <th class="black-underline noselect">
+          <th class="black-underline noselect" @click="sort('validShares')">
             Valid
-            <img src="../assets/sort/sort.svg" alt="Sort Icon" />
+            <WorkerListSortIcon :sortValue="sortKeys.validShares" />
           </th>
-          <th class="black-underline noselect">
+          <th class="black-underline noselect" @click="sort('staleShares')">
             Stale
-            <img src="../assets/sort/sort.svg" alt="Sort Icon" />
+            <WorkerListSortIcon :sortValue="sortKeys.staleShares" />
           </th>
-          <th class="black-underline noselect">
+          <th class="black-underline noselect" @click="sort('invalidShares')">
             Invalid
-            <img src="../assets/sort/sort.svg" alt="Sort Icon" />
+            <WorkerListSortIcon :sortValue="sortKeys.invalidShares" />
           </th>
-          <th class="black-underline noselect">
+          <th class="black-underline noselect" @click="sort('lastSeen')">
             Last Seen
-            <img src="../assets/sort/sort.svg" alt="Sort Icon" />
+            <WorkerListSortIcon :sortValue="sortKeys.lastSeen" />
           </th>
         </tr>
       </thead>
@@ -56,14 +56,29 @@
 
 <script>
 import WorkerListItem from "./WorkerListItem.vue";
+import WorkerListSortIcon from "./WorkerListSortIcon.vue";
 
 export default {
   name: "WorkerList",
   components: {
     WorkerListItem,
+    WorkerListSortIcon,
   },
   data() {
     return {
+      ascending: false,
+      sortedKey: "",
+      hasInitialized: false,
+      sortKeys: {
+        // Descending: -1, No sort: 0, Ascending: 1
+        workerName: 0,
+        reportedHashrate: 0,
+        effectiveHashrate: 0,
+        validShares: 0,
+        staleShares: 0,
+        invalidShares: 0,
+        lastSeen: 0,
+      },
       workers: [
         {
           workerName: "rig1",
@@ -91,6 +106,38 @@ export default {
         },
       ],
     };
+  },
+  methods: {
+    sort: function (key) {
+      var aSort = -1;
+      var bSort = 1;
+      if (key != this.sortedKey) {
+        this.sortKeys[this.sortedKey] = 0;
+        this.sortedKey = key;
+        if (this.hasInitialized) {
+          this.ascending = true;
+        } else {
+          this.ascending = false;
+          this.hasInitialized = true;
+        }
+      }
+      if (this.ascending) {
+        aSort = 1;
+        bSort = -1;
+      }
+      this.ascending = !this.ascending;
+
+      this.sortKeys[key] = bSort;
+      this.workers.sort(function (a, b) {
+        // Compare the 2 dates
+        if (a[key] < b[key]) return aSort;
+        if (a[key] > b[key]) return bSort;
+        return 0;
+      });
+    },
+  },
+  beforeMount() {
+    this.sort("workerName");
   },
 };
 </script>
