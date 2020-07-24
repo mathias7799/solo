@@ -53,8 +53,8 @@ export default {
           Math.round(this.balance * Math.pow(10, 3)) / Math.pow(10, 3);
       }
 
-      this.onlineWorkers = data.onlineWorkers;
-      this.offlineWorkers = data.workersOffline;
+      this.workersOnline = data.workersOnline;
+      this.workersOffline = data.workersOffline;
       this.efficiency = Math.round(data.efficiency * 10) / 10;
 
       var currencyDetails = getCurrencyDetails(data.chainId);
