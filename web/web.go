@@ -116,7 +116,7 @@ func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGr
 					"char": siChar,
 				},
 			},
-			"error": err,
+			"error": processError(err),
 		})
 		w.Write(data)
 	})
