@@ -78,7 +78,7 @@ type Block struct {
 // WriteStatToBatch writes worker stat object to the LevelDB batch
 func WriteStatToBatch(batch *leveldb.Batch, stat Stat, timestamp int64) {
 	data, _ := msgpack.Marshal(stat)
-	key := StatPrefix + stat.WorkerName + "_" + strconv.FormatInt(timestamp, 10)
+	key := StatPrefix + strconv.FormatInt(timestamp, 10) + "_" + stat.WorkerName
 	batch.Put([]byte(key), data)
 }
 
