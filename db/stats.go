@@ -87,7 +87,7 @@ func WriteTotalStatToBatch(batch *leveldb.Batch, stat TotalStat, timestamp int64
 	batch.Put([]byte(key), data)
 }
 
-// PruneStats removes data older than
+// PruneStats removes data with the age more than `deleteDataOlderThanSecs`
 func (db *Database) PruneStats(deleteDataOlderThanSecs int64) {
 	iter := db.DB.NewIterator(util.BytesPrefix([]byte(StatPrefix)), nil)
 
