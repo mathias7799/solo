@@ -146,6 +146,18 @@ func (db *Database) GetValidSharesThenReset() (uint64, error) {
 	return strconv.ParseUint(string(valBytes), 10, 64)
 }
 
+// GetTotalStatsByTimestamp returns TotalStat by specified timestamp
+func (db *Database) GetTotalStatsByTimestamp(timestamp int64) (TotalStat, error) {
+	key := TotalStatPrefix + "_" + strconv.FormatInt(timestamp, 10)
+	data, err := db.DB.Get([]byte(key), nil)
+	if err != nil {
+		return TotalStat{}, err
+	}
+	var parsedData TotalStat
+	err = msgpack.Unmarshal(data, &parsedData)
+	return parsedData, err
+}
+
 // GetRoundTime returns round time
 func (db *Database) GetRoundTime() int64 {
 	blocks := db.GetBlocksUnsorted()
