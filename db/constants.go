@@ -30,3 +30,9 @@ const MinedBlockPrefix = "block__"
 
 // MinedValidSharesKey is used to identify if key is mined valid shares counter
 const MinedValidSharesKey = "mined_valid_shares"
+
+// AverageTotalHashrateKey is used to identify if key is average total hashrate item
+const AverageTotalHashrateKey = "average_total_hashrate"
+
+// TotalSharesKey is used to identify if key is total shares item
+const TotalSharesKey = "total_shares"
