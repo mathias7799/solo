@@ -127,6 +127,8 @@ func (c *Collector) Run() {
 				pendingTotalStat.ValidShareCount += pendingStat.ValidShares
 				pendingTotalStat.StaleShareCount += pendingStat.StaleShares
 				pendingTotalStat.InvalidShareCount += pendingStat.InvalidShares
+				pendingTotalStat.EffectiveHashrate += effectiveHashrate
+				pendingTotalStat.ReportedHashrate += pendingStat.ReportedHashrate
 				pendingTotalStat.WorkerCount++
 
 				db.WriteStatToBatch(batch, stat, timestamp)

@@ -46,10 +46,12 @@ type Stat struct {
 
 // TotalStat represents an interface for a summarized stat DB object
 type TotalStat struct {
-	ValidShareCount   uint64 `msgpack:"valid_share_count"`
-	StaleShareCount   uint64 `msgpack:"stale_share_count"`
-	InvalidShareCount uint64 `msgpack:"invalid_share_count"`
-	WorkerCount       uint64 `msgpack:"worker_count"`
+	ValidShareCount   uint64  `msgpack:"valid_share_count" json:"validShares"`
+	StaleShareCount   uint64  `msgpack:"stale_share_count"`
+	InvalidShareCount uint64  `msgpack:"invalid_share_count"`
+	ReportedHashrate  float64 `msgpack:"reported_hashrate"`
+	EffectiveHashrate float64 `msgpack:"effective_hashrate"`
+	WorkerCount       uint64  `msgpack:"worker_count"`
 }
 
 // BestShare represents an interface for a best share DB object
