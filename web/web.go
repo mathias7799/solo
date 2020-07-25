@@ -19,6 +19,7 @@ package web
 import (
 	"context"
 	"encoding/json"
+	"math/big"
 	"net/http"
 	"sync"
 
@@ -31,6 +32,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
+
+// h is a Simple shortcut to map[string]interface{}
+type h map[string]interface{}
 
 // Server is a RESTful API & Front End App server instance
 type Server struct {
@@ -87,8 +91,33 @@ func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGr
 		// DEBUG ONLY !!!
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		currentTotalStats, _ := server.database.GetTotalStatsByTimestamp(utils.GetCurrent10MinTimestamp())
-		data, _ := json.Marshal(currentTotalStats)
+		currentTotalStats, err := server.database.GetTotalStatsByTimestamp(utils.GetCurrent10MinTimestamp())
+		totalShares, err := server.database.GetTotalShares()
+
+		averageEffective := db.GetTotalAverageHashrate()
+		averageEffectiveFloat, _ := big.NewFloat(0).SetInt(averageEffective).Float64()
+
+		siDiv, siChar := utils.GetSI(averageEffectiveFloat)
+
+		data, _ := json.Marshal(h{
+			"result": h{
+				"hashrate": h{
+					"effective": currentTotalStats.EffectiveHashrate,
+					"reported":  currentTotalStats.ReportedHashrate,
+					"average":   averageEffective,
+				},
+				"shares": h{
+					"valid":   totalShares.ValidShares,
+					"stale":   totalShares.StaleShares,
+					"invalid": totalShares.InvalidShares,
+				},
+				"si": h{
+					"div":  siDiv,
+					"char": siChar,
+				},
+			},
+			"error": err,
+		})
 		w.Write(data)
 	})
 
