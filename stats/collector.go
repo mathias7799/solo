@@ -147,6 +147,7 @@ func (c *Collector) Run() {
 			}).Info("Collected data")
 			totalCollectedHashrate = 0
 
+			c.Database.GetAndWriteCachedValues()
 			c.Database.PruneStats(keepStatsForSecs)
 		}
 	}
