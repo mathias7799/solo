@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/flexpool/solo/log"
+	"github.com/flexpool/solo/utils"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -213,6 +214,22 @@ func (db *Database) GetBlocksUnsorted() []Block {
 
 	iter.Release()
 	return blocks
+}
+
+// GetTotalHistory returns all "total" history (a day)
+func (db *Database) GetTotalHistory() ([]TotalStat, error) {
+	var history = make([]TotalStat, 144)
+	ts := utils.GetCurrent10MinTimestamp()
+	for i := int64(0); i < 144; i++ {
+		stat, err := db.GetTotalStatsByTimestamp(ts - i*600)
+		if err != nil {
+			return history, err
+		}
+
+		history[144-1-i] = stat
+	}
+
+	return history, nil
 }
 
 // GetUnsortedBestShares returns the unsorted best shares from the Database
