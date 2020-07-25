@@ -27,6 +27,7 @@ import (
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
 	"github.com/flexpool/solo/process"
+	"github.com/flexpool/solo/utils"
 
 	"github.com/sirupsen/logrus"
 )
@@ -67,7 +68,7 @@ func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGr
 		engineWaitGroup: engineWaitGroup,
 	}
 
-	mux.HandleFunc("/api/currentBlock", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v1/currentBlock", func(w http.ResponseWriter, r *http.Request) {
 
 		// DEBUG ONLY !!!
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -80,6 +81,15 @@ func NewServer(db *db.Database, node *nodeapi.Node, engineWaitGroup *sync.WaitGr
 			Result: currentBlock,
 			Error:  err,
 		}))
+	})
+
+	mux.HandleFunc("/api/v1/stats", func(w http.ResponseWriter, r *http.Request) {
+		// DEBUG ONLY !!!
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		currentTotalStats, _ := server.database.GetTotalStatsByTimestamp(utils.GetCurrent10MinTimestamp())
+		data, _ := json.Marshal(currentTotalStats)
+		w.Write(data)
 	})
 
 	server.httpServer = &http.Server{
