@@ -1,3 +1,19 @@
+// Flexpool Solo - A lightweight SOLO Ethereum mining pool
+// Copyright (C) 2020  Flexpool
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package stats
 
 import (
@@ -13,8 +29,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-const statCollectionPeriodSecs = 60 // Collect stats every minute
-const keepStatsForSecs = 86400      // Keep stats for one day
+const statCollectionPeriodSecs = 600 // Collect stats every 10 minutes
+const keepStatsForSecs = 86400       // Keep stats for one day
 
 // Collector is a stat collection daemon struct
 type Collector struct {
@@ -29,23 +45,33 @@ type Collector struct {
 	engineWaitGroup   *sync.WaitGroup
 }
 
-// ResetValues deletes (reinitializes) all values from Stats Collector
-func (c *Collector) ResetValues() {
+// Init initializes the Collector
+func (c *Collector) Init() {
 	c.Mux.Lock()
 	c.PendingStats = make(map[string]PendingStat)
 	c.Mux.Unlock()
 }
 
+// Clear deletes all keys (and values) from the c.PendingStats
+func (c *Collector) Clear() {
+	c.Mux.Lock()
+	for k := range c.PendingStats {
+		delete(c.PendingStats, k)
+	}
+	c.Mux.Unlock()
+}
+
 // NewCollector creates a new Stats Collector
-func NewCollector(database *db.Database, engineWaitGroup *sync.WaitGroup) *Collector {
+func NewCollector(database *db.Database, engineWaitGroup *sync.WaitGroup, shareDifficulty uint64) *Collector {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	c := Collector{
 		Context:           ctx,
 		ContextCancelFunc: cancelFunc,
 		engineWaitGroup:   engineWaitGroup,
 		Database:          database,
+		ShareDifficulty:   shareDifficulty,
 	}
-	c.ResetValues()
+	c.Init()
 	return &c
 }
 
@@ -54,8 +80,6 @@ func (c *Collector) Run() {
 	// Wait group
 	c.engineWaitGroup.Add(1)
 	defer c.engineWaitGroup.Done()
-
-	// TODO: Collect outdated stats (garbege collection)
 
 	prevCollectionTimestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs
 
@@ -84,10 +108,12 @@ func (c *Collector) Run() {
 			c.Mux.Lock()
 
 			batch := new(leveldb.Batch)
+			pendingTotalStat := db.TotalStat{}
+			timestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs // Get rid of remainder
+
 			for workerName, pendingStat := range c.PendingStats {
-				timestamp := time.Now().Unix() / statCollectionPeriodSecs * statCollectionPeriodSecs // Get rid of remainder
 				effectiveHashrate := float64(pendingStat.ValidShares) * float64(c.ShareDifficulty)
-				totalCollectedHashrate += effectiveHashrate
+				totalCollectedHashrate += effectiveHashrate / statCollectionPeriodSecs
 				stat := db.Stat{
 					WorkerName:        workerName,
 					ValidShareCount:   pendingStat.ValidShares,
@@ -97,18 +123,31 @@ func (c *Collector) Run() {
 					EffectiveHashrate: effectiveHashrate,
 					IPAddress:         pendingStat.IPAddress,
 				}
+
+				pendingTotalStat.ValidShareCount += pendingStat.ValidShares
+				pendingTotalStat.StaleShareCount += pendingStat.StaleShares
+				pendingTotalStat.InvalidShareCount += pendingStat.InvalidShares
+				pendingTotalStat.EffectiveHashrate += effectiveHashrate
+				pendingTotalStat.ReportedHashrate += pendingStat.ReportedHashrate
+				pendingTotalStat.WorkerCount++
+
 				db.WriteStatToBatch(batch, stat, timestamp)
 			}
+
 			c.Mux.Unlock()
+			c.Clear()
+
+			db.WriteTotalStatToBatch(batch, pendingTotalStat, timestamp)
 
 			c.Database.DB.Write(batch, nil)
 
 			log.Logger.WithFields(logrus.Fields{
 				"prefix":             "stats",
 				"effective-hashrate": humanize.SIWithDigits(totalCollectedHashrate, 2, "H/s"),
-			}).Info("Successfully collected data.")
+			}).Info("Collected data")
 			totalCollectedHashrate = 0
 
+			c.Database.GetAndWriteCachedValues()
 			c.Database.PruneStats(keepStatsForSecs)
 		}
 	}

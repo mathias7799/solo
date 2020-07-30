@@ -1,3 +1,19 @@
+// Flexpool Solo - A lightweight SOLO Ethereum mining pool
+// Copyright (C) 2020  Flexpool
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package engine
 
 import (
@@ -9,6 +25,7 @@ import (
 	"github.com/flexpool/solo/log"
 	"github.com/flexpool/solo/nodeapi"
 	"github.com/flexpool/solo/stats"
+	"github.com/flexpool/solo/web"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -16,17 +33,23 @@ import (
 
 // MiningEngine represents the Flexpool Solo mining engine
 type MiningEngine struct {
-	Workmanager                  *gateway.WorkManager
 	workmanagerNotificationsBind string
+	webServerBind                string
 	shareDifficulty              uint64
-	Gateways                     []*gateway.Gateway
-	StatsCollector               *stats.Collector
-	Database                     *db.Database
-	waitGroup                    *sync.WaitGroup
+
+	Workmanager              *gateway.WorkManager
+	Gateways                 []*gateway.Gateway
+	StatsCollector           *stats.Collector
+	Database                 *db.Database
+	BlockConfirmationManager *stats.BlockConfirmationManager
+
+	WebServer *web.Server
+
+	waitGroup *sync.WaitGroup
 }
 
 // NewMiningEngine creates a new Mining Engine
-func NewMiningEngine(workreceiverBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string) (*MiningEngine, error) {
+func NewMiningEngine(workmanagerNotificationsBind string, shareDifficulty uint64, insecureStratumBind string, secureStratumBind string, stratumPassword string, nodeHTTPRPC string, databasePath string, blockConfirmationsRequired uint64, webServerBind string) (*MiningEngine, error) {
 	node, err := nodeapi.NewNode(nodeHTTPRPC)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create Node")
@@ -34,20 +57,28 @@ func NewMiningEngine(workreceiverBind string, shareDifficulty uint64, insecureSt
 
 	database, err := db.OpenDB(databasePath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to open db")
 	}
 
 	waitGroup := new(sync.WaitGroup)
 
-	statsCollector := stats.NewCollector(database, waitGroup)
+	statsCollector := stats.NewCollector(database, waitGroup, shareDifficulty)
+	blockConfirmationManager := stats.NewBlockConfirmationManager(database, waitGroup, node, blockConfirmationsRequired)
+
+	workmanager := gateway.NewWorkManager(workmanagerNotificationsBind, shareDifficulty, node, waitGroup)
+
+	webServer := web.NewServer(database, node, waitGroup, workmanager, webServerBind)
 
 	engine := MiningEngine{
-		Workmanager:                  gateway.NewWorkManager(workreceiverBind, shareDifficulty, node, waitGroup),
-		workmanagerNotificationsBind: workreceiverBind,
+		Workmanager:                  workmanager,
+		workmanagerNotificationsBind: workmanagerNotificationsBind,
 		shareDifficulty:              shareDifficulty,
 		StatsCollector:               statsCollector,
+		BlockConfirmationManager:     blockConfirmationManager,
 		Database:                     database,
 		waitGroup:                    waitGroup,
+		WebServer:                    webServer,
+		webServerBind:                webServerBind,
 	}
 
 	if insecureStratumBind != "" {
@@ -81,6 +112,14 @@ func (e *MiningEngine) Start() {
 		go g.Run()
 	}
 
+	go e.BlockConfirmationManager.Run()
+
+	go e.WebServer.Run()
+	log.Logger.WithFields(logrus.Fields{
+		"prefix": "engine",
+		"bind":   e.webServerBind,
+	}).Info("Started Web Server")
+
 	log.Logger.WithFields(logrus.Fields{
 		"prefix":     "engine",
 		"share-diff": humanize.SIWithDigits(float64(e.shareDifficulty), 2, "H"),
@@ -94,6 +133,8 @@ func (e *MiningEngine) Stop() {
 	}
 	e.Workmanager.Stop()
 	e.StatsCollector.Stop()
+	e.BlockConfirmationManager.Stop()
+	e.WebServer.Stop()
 
 	e.waitGroup.Wait()
 	e.Database.DB.Close()

@@ -1,9 +1,27 @@
+// Flexpool Solo - A lightweight SOLO Ethereum mining pool
+// Copyright (C) 2020  Flexpool
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package gateway
 
 import (
 	"bufio"
 	"math/big"
 	"net"
+	"strings"
+	"time"
 
 	"github.com/flexpool/solo/jsonrpc"
 	"github.com/flexpool/solo/log"
@@ -44,13 +62,17 @@ func (g *Gateway) RunWorkSender(conn net.Conn) {
 func (g *Gateway) HandleConnection(conn net.Conn) {
 	defer conn.Close()
 
+	// Add 5 sec timeout
+	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+
 	scanner := bufio.NewScanner(conn)
 
 	var authenticated bool
 
 	var workerName string
 
-	ip := conn.RemoteAddr().String()
+	ipSplitted := strings.Split(conn.RemoteAddr().String(), ":")
+	ip := strings.Join(ipSplitted[:len(ipSplitted)-1], ":")
 
 	for scanner.Scan() {
 		request, err := jsonrpc.UnmarshalRequest(scanner.Bytes())
@@ -106,6 +128,14 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 
 			authenticated = true
 
+			// Remove timeout
+			conn.SetReadDeadline(time.Time{})
+
+			g.statsCollector.Mux.Lock()
+			pendingStat := g.statsCollector.PendingStats[workerName]
+			pendingStat.IPAddress = ip
+			g.statsCollector.Mux.Unlock()
+
 			// Starting work sender
 			go g.RunWorkSender(conn)
 
@@ -148,10 +178,14 @@ func (g *Gateway) HandleConnection(conn net.Conn) {
 
 				g.statsCollector.Mux.Lock()
 				pendingStat := g.statsCollector.PendingStats[workerName]
+				pendingStat.IPAddress = ip
 
 				switch shareType {
 				case types.ShareValid:
 					pendingStat.ValidShares++
+					if g.statsCollector.Database.IncrValidShares() != nil {
+						log.Logger.Error("Unable to increment valid shares counter")
+					}
 				case types.ShareStale:
 					pendingStat.StaleShares++
 				case types.ShareInvalid:
